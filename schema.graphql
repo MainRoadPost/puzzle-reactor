@@ -1,0 +1,5735 @@
+"""
+User-task assignment
+"""
+type Assignment {
+  """
+  Task ID
+  """
+  taskId: UUID!
+  """
+  User ID
+  """
+  userId: UUID!
+  """
+  Expected daily hours
+  """
+  hoursInDay: Int
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Assigned user
+  """
+  user: User!
+}
+
+"""
+Input data for creating a new assignment
+"""
+input AssignmentAdd {
+  """
+  ID of the task to assign
+  """
+  taskId: UUID!
+  """
+  ID of the user to be assigned to the task
+  """
+  userId: UUID!
+}
+
+"""
+Input data for updating an existing assignment
+"""
+input AssignmentChange {
+  """
+  New value for hours_in_day (can be undefined, null, or a value)
+  """
+  hoursInDay: Int
+}
+
+"""
+Event payload for when an assignment is deleted
+"""
+type AssignmentDeleted {
+  """
+  ID of the task that was unassigned
+  """
+  taskId: UUID!
+  """
+  ID of the user who was unassigned from the task
+  """
+  userId: UUID!
+}
+
+"""
+Record of a user's team assignment for a specific time period
+"""
+type AuditUserTeam {
+  """
+  ID of the user whose team assignment is being tracked
+  """
+  userId: UUID!
+  """
+  Date until which this team assignment is valid
+  """
+  until: NaiveDate!
+  """
+  ID of the team the user belongs to, if any
+  """
+  teamId: UUID
+  """
+  Resolves the complete user information for this team assignment
+  """
+  user: User!
+  """
+  Resolves the complete team information for this assignment
+  """
+  team: Team
+}
+
+"""
+Input for updating an audit team record
+"""
+input AuditUserTeamChange {
+  """
+  Optional new "until" date (record validity period end)
+  """
+  until: NaiveDate
+  """
+  Optional new team ID (None to set it to null, Some(None) to leave unchanged)
+  """
+  teamId: UUID
+}
+
+"""
+Base project structure element
+"""
+interface Chunk {
+  """
+  Project this chunk belongs to
+  """
+  projectId: UUID!
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Parent chunk ID
+  """
+  parentId: UUID
+  """
+  Title
+  """
+  title: String!
+  """
+  Rich text description
+  """
+  description: Delta
+  """
+  Due date
+  """
+  dueDate: NaiveDate
+  """
+  Priority level
+  """
+  priority: Int!
+  """
+  Direct time estimation
+  """
+  estimation: Estimation
+  """
+  Total estimation including descendants
+  """
+  estimationSum: Estimation!
+  """
+  Total time spent including descendants
+  """
+  spentSum: Estimation!
+  """
+  Number of direct children
+  """
+  childrenCount: Int!
+  """
+  Depth level in chunk hierarchy, starting from 0
+  """
+  depth: Int!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Parent chunk
+  """
+  parent: Chunk
+  """
+  Parent project
+  """
+  project: Project!
+  """
+  Creator ID
+  """
+  createdBy: UUID!
+  """
+  Last updater ID
+  """
+  updatedBy: UUID!
+  """
+  Creator user
+  """
+  createdByUser: User!
+  """
+  Last updater user
+  """
+  updatedByUser: User!
+}
+
+"""
+Represents a deleted chunk for subscription notifications
+"""
+type ChunkDeleted {
+  """
+  Unique identifier of the deleted chunk
+  """
+  id: UUID!
+}
+
+type ChunkSpentReport {
+  """
+  Date of this report
+  """
+  reportDate: NaiveDate!
+  """
+  Hours spent on this date
+  """
+  spentHours: Int!
+  """
+  Cumulative hours up to this date
+  """
+  rollingSum: Int!
+  """
+  User-specific time records
+  """
+  users: [ChunkSpentUserReport!]!
+}
+
+type ChunkSpentUserReport {
+  """
+  User who recorded time
+  """
+  userId: UUID!
+  """
+  Hours spent by this user
+  """
+  spentHours: Int!
+  """
+  Associated user
+  """
+  user: User!
+}
+
+"""
+Input for updating common chunk fields
+"""
+input ChunksChange {
+  """
+  New parent ID
+  """
+  parentId: UUID
+  """
+  Updated title
+  """
+  title: String
+  """
+  Updated description
+  """
+  description: Delta
+  """
+  Updated priority
+  """
+  priority: Int
+  """
+  Updated deadline date
+  """
+  dueDate: NaiveDate
+  """
+  Updated estimation
+  """
+  estimation: Int
+}
+
+"""
+Input object for specifying how chunks should be ordered
+"""
+input ChunksOrder {
+  """
+  Field to order by
+  """
+  field: ChunksOrderField!
+  """
+  Sort in ascending (true) or descending (false) order
+  """
+  ascending: Boolean!
+}
+
+"""
+Enum of fields that can be used for ordering chunks
+"""
+enum ChunksOrderField {
+  """
+  Order by chunk title alphabetically
+  """
+  TITLE
+  """
+  Order by total estimation hours
+  """
+  ESTIMATION_SUM
+  """
+  Order by total spent hours
+  """
+  SPENT_SUM
+  """
+  Order by priority level
+  """
+  PRIORITY
+  """
+  Order by task/epic status
+  """
+  STATUS
+  """
+  Order by last update timestamp
+  """
+  UPDATED_AT
+}
+
+"""
+Represents a user's authentication claims/session information
+"""
+type Claims {
+  """
+  The authenticated user's ID
+  """
+  id: UUID!
+  """
+  Not Before timestamp - when the token becomes valid
+  """
+  nbf: Timestamp!
+  """
+  Expiration timestamp - when the token expires
+  """
+  exp: Timestamp!
+}
+
+"""
+Organization entity in the system
+"""
+type Company {
+  """
+  Unique identifier
+  """
+  id: Int!
+  """
+  Company name
+  """
+  name: String!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Deletion timestamp
+  """
+  deletedAt: Timestamp
+}
+
+"""
+Represents a time period with start and end dates.
+"""
+input DateRange {
+  """
+  The start date of the range (inclusive)
+  """
+  start: NaiveDate!
+  """
+  The end date of the range (inclusive)
+  """
+  end: NaiveDate!
+}
+
+scalar Delta
+
+"""
+Authentication domain for users
+"""
+type Domain {
+  """
+  Unique identifier
+  """
+  id: Int!
+  """
+  Domain name
+  """
+  name: String!
+  """
+  Company ID
+  """
+  companyId: Int!
+  """
+  Default timezone for users
+  """
+  defaultTimezone: String!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Deletion timestamp
+  """
+  deletedAt: Timestamp
+}
+
+"""
+GraphQL object implementation for Epic type
+"""
+type Epic implements Chunk {
+  """
+  Project ID
+  """
+  projectId: UUID!
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Parent chunk ID
+  """
+  parentId: UUID
+  """
+  Title
+  """
+  title: String!
+  """
+  Rich text description
+  """
+  description: Delta
+  """
+  Direct estimation in hours
+  """
+  estimation: Estimation
+  """
+  Total estimation including children
+  """
+  estimationSum: Estimation!
+  """
+  Total time spent including children
+  """
+  spentSum: Estimation!
+  """
+  Number of direct children
+  """
+  childrenCount: Int!
+  """
+  Depth level in chunk hierarchy, starting from 0
+  """
+  depth: Int!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Priority level
+  """
+  priority: Int!
+  """
+  Deadline date, if present
+  """
+  dueDate: NaiveDate
+  """
+  Derived task status
+  """
+  calcTaskStatus: TaskStatusEnum
+  """
+  Current workflow status
+  """
+  epicStatus: EpicStatusEnum!
+  """
+  Associated users
+  """
+  users: [User!]!
+  """
+  Associated sprints
+  """
+  sprints: [Sprint!]!
+  """
+  Project this epic belongs to
+  """
+  project: Project!
+  """
+  Associated products
+  """
+  products: [Product!]!
+  """
+  Parent chunk if it exists
+  """
+  parent: Chunk
+  """
+  ID of the user who created this epic
+  """
+  createdBy: UUID!
+  """
+  ID of the user who last updated this epic
+  """
+  updatedBy: UUID!
+  """
+  User who created this epic
+  """
+  createdByUser: User!
+  """
+  User who last updated this epic
+  """
+  updatedByUser: User!
+}
+
+"""
+Input for creating a new epic
+"""
+input EpicAdd {
+  """
+  UUID of the project this epic belongs to
+  """
+  projectId: UUID!
+  """
+  Optional parent chunk ID for epic hierarchy
+  """
+  parentId: UUID
+  """
+  Title or name of the epic
+  """
+  title: String!
+  """
+  Detailed description of the epic in Delta format
+  """
+  description: Delta
+  """
+  Estimated time to complete in hours
+  """
+  estimation: Int
+  """
+  Epic priority level (higher numbers = higher priority)
+  """
+  priority: Int
+  """
+  Due date for the epic
+  """
+  dueDate: NaiveDate
+  """
+  Initial status for the epic
+  """
+  status: EpicStatusEnum!
+  """
+  List of user IDs to assign to this epic
+  """
+  users: [UUID!]!
+  """
+  List of product IDs this epic is associated with
+  """
+  products: [UUID!]!
+  """
+  List of sprint IDs this epic belongs to
+  """
+  sprints: [UUID!]!
+}
+
+"""
+Input for updating an existing epic
+"""
+input EpicChange {
+  """
+  New parent ID (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  parentId: UUID
+  """
+  Updated epic title
+  """
+  title: String
+  """
+  Updated epic description (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  description: Delta
+  """
+  Updated time estimation (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  estimation: Int
+  """
+  Updated priority level
+  """
+  priority: Int
+  """
+  Due date for the epic (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  dueDate: NaiveDate
+  """
+  Updated epic status
+  """
+  status: EpicStatusEnum
+  """
+  Updated list of assigned users
+  """
+  users: UuidsUpdate
+  """
+  Updated list of associated products
+  """
+  products: [UUID!]
+  """
+  Updated list of sprints this epic belongs to
+  """
+  sprints: UuidsUpdate
+}
+
+"""
+GraphQL object implementation for EpicGroup
+"""
+type EpicGroup implements Chunk {
+  """
+  Project this epic group belongs to
+  """
+  projectId: UUID!
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Parent chunk ID, if any
+  """
+  parentId: UUID
+  """
+  Title of this epic group
+  """
+  title: String!
+  """
+  Rich text description if present
+  """
+  description: Delta
+  """
+  Time estimation in minutes, if present
+  """
+  estimation: Estimation
+  """
+  Sum of all estimations for this group and its descendants
+  """
+  estimationSum: Estimation!
+  """
+  Sum of all time spent on this group and its descendants
+  """
+  spentSum: Estimation!
+  """
+  Count of direct children
+  """
+  childrenCount: Int!
+  """
+  Depth level in chunk hierarchy, starting from 0
+  """
+  depth: Int!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Priority value
+  """
+  priority: Int!
+  """
+  Deadline date, if present
+  """
+  dueDate: NaiveDate
+  """
+  Calculated epic status based on child epics
+  """
+  calcEpicStatus: EpicStatusEnum
+  """
+  Calculated task status based on child tasks
+  """
+  calcTaskStatus: TaskStatusEnum
+  """
+  Project this group belongs to
+  """
+  project: Project!
+  """
+  Parent chunk, if available
+  """
+  parent: Chunk
+  """
+  ID of user who created this group
+  """
+  createdBy: UUID!
+  """
+  ID of user who last updated this group
+  """
+  updatedBy: UUID!
+  """
+  User who created this group
+  """
+  createdByUser: User!
+  """
+  User who last updated this group
+  """
+  updatedByUser: User!
+}
+
+"""
+Input for creating a new epic group
+"""
+input EpicGroupAdd {
+  """
+  UUID of the project this epic group belongs to
+  """
+  projectId: UUID!
+  """
+  Optional parent chunk ID for hierarchy
+  """
+  parentId: UUID
+  """
+  Title or name of the epic group
+  """
+  title: String!
+  """
+  Detailed description of the epic group in Delta format
+  """
+  description: Delta
+  """
+  Priority level (higher numbers = higher priority)
+  """
+  priority: Int
+  """
+  Due date for the epic group
+  """
+  dueDate: NaiveDate
+  """
+  Estimated time to complete in hours
+  """
+  estimation: Int
+}
+
+"""
+Input for updating existing epic groups
+"""
+input EpicGroupChange {
+  """
+  New parent ID (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  parentId: UUID
+  """
+  Updated title
+  """
+  title: String
+  """
+  Updated description (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  description: Delta
+  """
+  Updated priority level
+  """
+  priority: Int
+  """
+  Updated deadline date (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  dueDate: NaiveDate
+  """
+  Updated time estimation (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  estimation: Int
+}
+
+"""
+Epic status values
+"""
+enum EpicStatusEnum {
+  """
+  Not yet scheduled
+  """
+  BACKLOG
+  """
+  Scheduled for work
+  """
+  TODO
+  """
+  Currently active
+  """
+  WIP
+  """
+  Temporarily blocked
+  """
+  HOLD
+  """
+  Completed
+  """
+  DONE
+  """
+  Will not be implemented
+  """
+  OMIT
+}
+
+"""
+Represents Int32 (only positive part, used for time estimations)
+"""
+scalar Estimation
+
+"""
+Represents a mapping of reaction types to lists of user IDs
+"""
+scalar ItemReactions
+
+"""
+A scalar that can represent any JSON value.
+"""
+scalar JSON
+
+"""
+Media file attachment in the system
+"""
+type Media {
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Project ID
+  """
+  projectId: UUID!
+  """
+  Post ID
+  """
+  postId: UUID!
+  """
+  Comment ID, if attached to a comment
+  """
+  commentId: UUID
+  """
+  Original filename
+  """
+  filename: String!
+  """
+  Content hash
+  """
+  hash: String!
+  """
+  Whether thumbnail exists
+  """
+  hasThumbnail: Boolean!
+  """
+  Whether media has audio
+  """
+  hasSound: Boolean!
+  """
+  MIME type
+  """
+  mimetype: String!
+  """
+  Frames per second for video
+  """
+  fps: Float
+  """
+  Width and height in pixels
+  """
+  resolution: Resolution
+  """
+  Display order position
+  """
+  sortOrder: Int!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  User who created the media
+  """
+  createdBy: UUID!
+  """
+  Associated post
+  """
+  post: Post!
+  """
+  User who created this media
+  """
+  createdByUser: User!
+}
+
+"""
+Media processing job
+"""
+type MediaJob {
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Project ID
+  """
+  projectId: UUID!
+  """
+  Post ID
+  """
+  postId: UUID!
+  """
+  Comment ID, if applicable
+  """
+  commentId: UUID
+  """
+  User who initiated the job
+  """
+  userId: UUID!
+  """
+  Original filename
+  """
+  filename: String!
+  """
+  Content hash
+  """
+  hash: String!
+  """
+  MIME type
+  """
+  mimetype: String!
+  """
+  Display order position
+  """
+  sortOrder: Int!
+  """
+  Current status
+  """
+  status: QueueStatus!
+  """
+  Processing priority
+  """
+  priority: Int!
+  """
+  Source path or URL
+  """
+  source: String!
+  """
+  Target path
+  """
+  target: String!
+  """
+  Processing start timestamp
+  """
+  startedAt: Timestamp!
+  """
+  Processing time in seconds
+  """
+  duration: Float
+  """
+  Error message if failed
+  """
+  error: String
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+}
+
+"""
+Represents a deleted media job notification.
+"""
+type MediaJobDeleted {
+  """
+  The unique identifier of the deleted media job.
+  """
+  id: UUID!
+}
+
+type Medialist {
+  """
+  Primary key UUID for the medialist.
+  """
+  id: UUID!
+  """
+  Human-readable title for the medialist.
+  """
+  title: String!
+  """
+  Timestamp when the medialist was created (UTC).
+  """
+  createdAt: Timestamp!
+  """
+  UUID of the user who created the medialist.
+  """
+  createdBy: UUID!
+  """
+  Timestamp when the medialist was last updated (UTC).
+  """
+  updatedAt: Timestamp!
+  """
+  UUID of the user who last updated the medialist.
+  """
+  updatedBy: UUID!
+  """
+  Free-form tags associated with the medialist.
+  """
+  tags: [String!]!
+  """
+  Returns the duration of the medialist in seconds.
+  """
+  medialistMedia: [MedialistMedia!]!
+  """
+  User who created this medialist
+  """
+  createdByUser: User!
+  """
+  User who last updated this post
+  """
+  updatedByUser: User!
+}
+
+"""
+Input type for creating a new medialist
+"""
+input MedialistAdd {
+  """
+  Title of the medialist
+  """
+  title: String!
+  """
+  List of tags associated with the medialist
+  """
+  tags: [String!]!
+  """
+  List of media IDs in the medialist
+  """
+  media: [UUID!]
+}
+
+"""
+Input type for updating an existing medialist
+"""
+input MedialistChange {
+  """
+  Title of the medialist
+  """
+  title: String
+  """
+  List of tags associated with the medialist
+  """
+  tags: [String!]
+}
+
+"""
+Relay-style connection for medialists
+"""
+type MedialistConnection {
+  """
+  The medialists in this page
+  """
+  edges: [MedialistEdge!]!
+  """
+  Information about pagination
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Represents a deleted medialist notification
+"""
+type MedialistDeleted {
+  """
+  Unique identifier of the deleted medialist
+  """
+  id: UUID!
+}
+
+"""
+Relay-style edge for medialists
+"""
+type MedialistEdge {
+  """
+  The medialist node
+  """
+  node: Medialist!
+  """
+  Opaque cursor for this edge
+  """
+  cursor: String!
+}
+
+type MedialistMedia {
+  """
+  The UUID of the medialist this media belongs to
+  """
+  medialistId: UUID!
+  """
+  The UUID of the media item
+  """
+  mediaId: UUID!
+  """
+  The position of this media item in the medialist
+  """
+  position: Int!
+  media: Media!
+}
+
+"""
+Input type for adding media to a medialist
+"""
+input MedialistMediaAdd {
+  """
+  List of media IDs to add to the medialist
+  """
+  mediaIds: [UUID!]!
+  """
+  Optional position to insert before (1-based); if omitted, appends to end
+  """
+  before: Int
+}
+
+"""
+Filters for querying medialists.
+"""
+input MedialistsFilter {
+  """
+  Restrict results to medialists with media from these projects.
+  """
+  projectIds: [UUID!]
+  """
+  Restrict results to medialists created by these users.
+  """
+  userIds: [UUID!]
+  """
+  Case-insensitive substring match against the medialist title.
+  """
+  title: String
+  """
+  Require that the medialist's tags contain all of these tags.
+  """
+  tagsInclude: [String!]
+  """
+  Exclude medialists which have any of these tags.
+  """
+  tagsExclude: [String!]
+}
+
+type MetricReports {
+  """
+  User who performed the work
+  """
+  userId: UUID!
+  """
+  Team the user belonged to when performing the work, if any
+  """
+  teamId: UUID
+  """
+  Total hours spent on this project-product combination
+  """
+  totalSpentHours: Float!
+  """
+  Product hierarchy path from project root to specific product
+  """
+  productHierarchy: [UUID!]!
+  """
+  Project where the work was performed
+  """
+  projectUuid: UUID!
+  """
+  User associated with this report
+  """
+  user: User!
+  """
+  Team associated with this report, if any
+  """
+  team: Team
+  """
+  Project associated with this report
+  """
+  project: Project!
+  """
+  Products mentioned in this report's hierarchy
+  """
+  products: [Product!]!
+}
+
+type MetricSpecialDays {
+  """
+  User who has the special day
+  """
+  userId: UUID!
+  """
+  Team the user belonged to at the time, if any
+  """
+  teamId: UUID
+  """
+  Number of special days of this kind
+  """
+  totalSpecialDays: Int!
+  """
+  Type of special day
+  """
+  kindId: Int!
+  """
+  Associated user
+  """
+  user: User!
+  """
+  Associated team, if any
+  """
+  team: Team
+  """
+  Special day type details
+  """
+  kind: SpecialDayKind!
+}
+
+type Mutation {
+  """
+  Logs in a user and returns its claims
+  """
+  login(
+    """
+    Optional domain name for LDAP authentication
+    """
+    domainName: String
+    """
+    Username for authentication
+    """
+    username: String!
+    """
+    User's password
+    """
+    password: String!
+  ): Claims!
+  """
+  Logout a user
+  """
+  logout: String!
+  """
+  Creates a new user account
+  """
+  userCreate(
+    """
+    User creation data
+    """
+    data: UserAdd!
+  ): User!
+  """
+  Updates an existing user account
+  """
+  userUpdate(
+    """
+    ID of the user to update
+    """
+    userId: UUID!
+    """
+    User update data
+    """
+    change: UserChange!
+  ): User!
+  """
+  Updates multiple users at once
+  """
+  usersUpdate(
+    """
+    List of user IDs to update
+    """
+    userIds: [UUID!]!
+    """
+    Common changes to apply to all users
+    """
+    change: UserCommonChange!
+  ): [User!]!
+  """
+  Permanently deletes users
+  """
+  usersDelete(
+    """
+    List of user IDs to permanently delete
+    """
+    userIds: [UUID!]!
+  ): Int!
+  """
+  Creates a new team
+  """
+  teamCreate(
+    """
+    The name for the new team, must be at least 2 characters and not contain special characters
+    """
+    name: String!
+  ): Team!
+  """
+  Updates an existing team
+  """
+  teamUpdate(
+    """
+    The UUID of the team to update
+    """
+    teamId: UUID!
+    """
+    The TeamChange object containing the fields to update
+    """
+    change: TeamChange!
+  ): Team!
+  """
+  Deletes multiple teams
+  """
+  teamsDelete(
+    """
+    A list of team UUIDs to delete
+    """
+    teamIds: [UUID!]!
+  ): Int!
+  """
+  Creates a new assignment linking a user to a task
+  """
+  assignmentCreate(
+    """
+    Contains the task ID and user ID for the new assignment
+    """
+    assignment: AssignmentAdd!
+  ): Assignment!
+  """
+  Updates an existing assignment
+  """
+  assignmentUpdate(
+    """
+    ID of the task in the assignment
+    """
+    taskId: UUID!
+    """
+    ID of the user in the assignment
+    """
+    userId: UUID!
+    """
+    Properties to update on the assignment
+    """
+    change: AssignmentChange!
+  ): Assignment!
+  """
+  Deletes an assignment between a user and a task
+  """
+  assignmentDelete(
+    """
+    ID of the task in the assignment
+    """
+    taskId: UUID!
+    """
+    ID of the user in the assignment
+    """
+    userId: UUID!
+    """
+    Hours spent today that should be recorded before deletion
+    """
+    spentHoursToday: Int!
+  ): Int!
+  """
+  Creates a new time report
+  """
+  reportCreate(
+    """
+    Data for the new report
+    """
+    report: ReportAdd!
+  ): Report
+  """
+  Updates an existing time report
+  """
+  reportUpdate(
+    """
+    Identifier for the report to update
+    """
+    input: ReportInput!
+    """
+    Changes to apply to the report
+    """
+    change: ReportChange!
+  ): Report
+  """
+  Deletes a report by its id
+  """
+  reportDelete(
+    """
+    Identifier for the report to delete
+    """
+    input: ReportInput!
+  ): Int!
+  """
+  Creates a new project
+  """
+  projectCreate(
+    """
+    Project data for creating the new project
+    """
+    project: ProjectAdd!
+  ): Project!
+  """
+  Updates an existing project
+  """
+  projectUpdate(
+    """
+    UUID of the project to update
+    """
+    projectId: UUID!
+    """
+    Project data to update
+    """
+    change: ProjectChange!
+  ): Project!
+  """
+  Deletes project by its id
+  """
+  projectDelete(
+    """
+    UUID of the project to delete
+    """
+    projectId: UUID!
+  ): Int!
+  """
+  Creates a new medialist with the provided details
+  """
+  medialistCreate(
+    """
+    Input containing details for the new medialist
+    """
+    medialistAdd: MedialistAdd!
+  ): Medialist!
+  """
+  Updates an existing medialist with the provided details
+  """
+  medialistUpdate(
+    """
+    ID of the medialist to update
+    """
+    medialistId: UUID!
+    """
+    Input containing updated details for the medialist
+    """
+    medialistUpdate: MedialistChange!
+  ): Medialist!
+  """
+  Deletes an existing medialist
+  """
+  medialistDelete(
+    """
+    ID of the medialist to delete
+    """
+    medialistId: UUID!
+  ): Int!
+  """
+  Adds media items to an existing medialist
+  """
+  medialistAddMedia(
+    """
+    ID of the medialist to add media to
+    """
+    medialistId: UUID!
+    """
+    Input containing media IDs and position details
+    """
+    mediaAdd: MedialistMediaAdd!
+  ): Medialist!
+  """
+  Updates position of the media in existing medialist
+  """
+  medialistUpdateMediaPosition(
+    """
+    ID of the medialist to update media position
+    """
+    medialistId: UUID!
+    """
+    ID of the media to update
+    """
+    mediaId: UUID!
+    """
+    New position of the media, if null - move to end
+    """
+    newPosition: Int
+  ): Medialist!
+  """
+  Removes media items from an existing medialist
+  """
+  medialistRemoveMedia(
+    """
+    ID of the medialist to remove media from
+    """
+    medialistId: UUID!
+    """
+    IDs of the media items to remove
+    """
+    mediaIds: [UUID!]!
+  ): Medialist!
+  """
+  Creates a new product
+  """
+  productCreate(
+    """
+    Product data for creating the new product
+    """
+    product: ProductAdd!
+  ): Product!
+  """
+  Updates common fields across multiple products
+  """
+  productsCommonUpdate(
+    """
+    The ID of the project to which the products belong
+    """
+    projectId: UUID!
+    """
+    A list of product IDs to be updated
+    """
+    productIds: [UUID!]!
+    """
+    The changes to be applied to the products
+    """
+    change: ProductCommonChange!
+  ): [Product!]!
+  """
+  Updates product groups
+  """
+  productGroupsUpdate(
+    """
+    The ID of the project to which the product groups belong
+    """
+    projectId: UUID!
+    """
+    A list of product group IDs to be updated
+    """
+    productIds: [UUID!]!
+    """
+    The changes to be applied to the product groups
+    """
+    change: ProductGroupChange!
+  ): [Product!]!
+  """
+  Updates standard products
+  """
+  productsUpdate(
+    """
+    The ID of the project to which the products belong
+    """
+    projectId: UUID!
+    """
+    A list of product IDs to be updated
+    """
+    productIds: [UUID!]!
+    """
+    The changes to be applied to the products
+    """
+    change: ProductChange!
+  ): [Product!]!
+  """
+  Deletes products by their IDs
+  """
+  productsDelete(
+    """
+    The ID of the project to which the products belong
+    """
+    projectId: UUID!
+    """
+    A list of product IDs to be deleted
+    """
+    productIds: [UUID!]!
+  ): Int!
+  """
+  Creates a new epic group
+  """
+  epicGroupCreate(
+    """
+    Data for the new epic group to be created
+    """
+    chunkToAdd: EpicGroupAdd!
+  ): EpicGroup!
+  """
+  Updates multiple epic groups at once
+  """
+  epicGroupsUpdate(
+    """
+    UUID of the project containing the epic groups
+    """
+    projectId: UUID!
+    """
+    List of epic group IDs to update
+    """
+    chunkIds: [UUID!]!
+    """
+    Changes to apply to all specified epic groups
+    """
+    change: EpicGroupChange!
+  ): [EpicGroup!]!
+  """
+  Creates a new epic
+  """
+  epicCreate(
+    """
+    Epic data to be created
+    """
+    chunkToAdd: EpicAdd!
+  ): Epic!
+  """
+  Updates epics
+  """
+  epicsUpdate(
+    """
+    UUID of the project containing the epics
+    """
+    projectId: UUID!
+    """
+    List of epic IDs to update
+    """
+    chunkIds: [UUID!]!
+    """
+    Changes to apply to all specified epics
+    """
+    change: EpicChange!
+  ): [Epic!]!
+  """
+  Creates a new TaskGroup
+  """
+  taskGroupCreate(
+    """
+    Data for the new TaskGroup
+    """
+    chunkToAdd: TaskGroupAdd!
+  ): TaskGroup!
+  """
+  Updates multiple TaskGroups
+  """
+  taskGroupsUpdate(
+    """
+    ID of the project containing the task groups
+    """
+    projectId: UUID!
+    """
+    List of TaskGroup IDs to update
+    """
+    chunkIds: [UUID!]!
+    """
+    Changes to apply to all specified TaskGroups
+    """
+    change: TaskGroupChange!
+  ): [TaskGroup!]!
+  """
+  Creates a new task in 'Backlog' status
+  """
+  taskCreate(
+    """
+    The task to be created
+    """
+    chunkToAdd: TaskAdd!
+  ): Task!
+  """
+  Updates multiple tasks
+  """
+  tasksUpdate(
+    """
+    UUID of the project containing the tasks
+    """
+    projectId: UUID!
+    """
+    List of task UUIDs to update
+    """
+    chunkIds: [UUID!]!
+    """
+    Modifications to apply to the tasks
+    """
+    change: TaskChange!
+  ): [Task!]!
+  """
+  Updates task status with appropriate side effects
+  """
+  taskChangeStatus(
+    """
+    UUID of the task to update
+    """
+    taskId: UUID!
+    """
+    New status to set on the task
+    """
+    status: TaskStatusEnum!
+    """
+    Optional action to take with assignments (required for certain transitions)
+    """
+    assignAction: TaskAssignAction
+  ): Task!
+  """
+  Removes current user from following chunks
+  """
+  unfollowChunks(
+    """
+    List of chunk IDs to unfollow
+    """
+    chunkIds: [UUID!]!
+  ): [Chunk!]!
+  """
+  Updates chunks with common changes
+  """
+  chunksUpdate(
+    """
+    Project ID
+    """
+    projectId: UUID!
+    """
+    Chunk IDs to update
+    """
+    chunkIds: [UUID!]!
+    """
+    Changes to apply
+    """
+    change: ChunksChange!
+  ): [Chunk!]!
+  """
+  Deletes multiple chunks
+  """
+  chunksDelete(
+    """
+    Project ID
+    """
+    projectId: UUID!
+    """
+    Chunk IDs to delete
+    """
+    chunkIds: [UUID!]!
+  ): Int!
+  """
+  Creates a new post with the provided details
+  """
+  postCreate(
+    """
+    Input containing details for the new post
+    """
+    postAdd: PostAdd!
+  ): Post!
+  """
+  Updates an existing post with the provided changes
+  """
+  postUpdate(
+    """
+    The ID of the post to update
+    """
+    postId: UUID!
+    """
+    The changes to apply to the post
+    """
+    change: PostChange!
+  ): Post!
+  """
+  Deletes a post by its ID
+  """
+  postDelete(
+    """
+    The ID of the project the post belongs to
+    """
+    projectId: UUID!
+    """
+    The ID of the post to delete
+    """
+    postId: UUID!
+  ): Int!
+  """
+  Allows users to create a post without authentication
+  """
+  postCreateBlind(
+    """
+    Input containing details for the blind post creation
+    """
+    postAdd: PostAddBlind!
+  ): UUID!
+  """
+  Creates a new comment on a post
+  """
+  postCommentCreate(
+    """
+    Input containing post ID, project ID, comment content, and optional media
+    """
+    postCommentAdd: PostCommentAdd!
+  ): PostComment!
+  """
+  Updates an existing post comment
+  """
+  postCommentUpdate(
+    """
+    UUID of the project
+    """
+    projectId: UUID!
+    """
+    UUID of the comment to update
+    """
+    commentId: UUID!
+    """
+    Input containing changes to apply to the comment
+    """
+    change: PostCommentChange!
+  ): PostComment!
+  """
+  Deletes post comment by its id
+  """
+  postCommentDelete(
+    """
+    UUID of the project
+    """
+    projectId: UUID!
+    """
+    UUID of the comment to delete
+    """
+    commentId: UUID!
+  ): Int!
+  """
+  Deletes a media job by its ID
+  """
+  mediajobDelete(
+    """
+    The UUID of the media job to delete
+    """
+    mediaJobId: UUID!
+  ): Int!
+  """
+  Deletes a notification by ID
+  """
+  notificationDelete(
+    """
+    ID of the notification to delete
+    """
+    notificationId: UUID!
+  ): Boolean!
+  """
+  Marks notifications as read by deleting them for a specific post/comment
+  """
+  notificationsMarkRead(
+    """
+    Optional ID of the post
+    """
+    postId: UUID
+    """
+    Optional ID of the specific comment
+    """
+    postCommentId: UUID
+  ): Int!
+  """
+  Updates a historical team assignment record
+  """
+  auditUserTeamUpdate(
+    """
+    ID of the user whose team assignment is being updated
+    """
+    userId: UUID!
+    """
+    The date until which this record was valid
+    """
+    until: NaiveDate!
+    """
+    Properties to update on the team assignment record
+    """
+    change: AuditUserTeamChange!
+  ): User!
+  """
+  Deletes a historical team assignment record
+  """
+  auditUserTeamDelete(
+    """
+    ID of the user whose team assignment is being deleted
+    """
+    userId: UUID!
+    """
+    The date until which this record was valid
+    """
+    until: NaiveDate!
+  ): User!
+  """
+  Adds a reaction to a post
+  """
+  postAddReaction(
+    """
+    ID of the project to which the post belongs
+    """
+    projectId: UUID!
+    """
+    ID of the post to which to add the reaction
+    """
+    postId: UUID!
+    """
+    The reaction to add
+    """
+    reaction: String!
+  ): Post!
+  """
+  Deletes a reaction from a post
+  """
+  postDeleteReaction(
+    """
+    ID of the project to which the post belongs
+    """
+    projectId: UUID!
+    """
+    ID of the post from which to delete the reaction
+    """
+    postId: UUID!
+    """
+    The reaction to delete
+    """
+    reaction: String!
+  ): Post!
+  """
+  Create a new sprint
+  """
+  sprintCreate(
+    """
+    Input data for the new sprint
+    """
+    sprintAdd: SprintAdd!
+  ): Sprint!
+  """
+  Update sprints
+  """
+  sprintUpdate(
+    """
+    ID of the project the sprints belong to
+    """
+    projectId: UUID!
+    """
+    IDs of the sprints to update
+    """
+    sprintIds: [UUID!]!
+    """
+    Input data for the updates
+    """
+    change: SprintChange!
+  ): [Sprint!]!
+  """
+  Delete sprints
+  """
+  sprintDelete(
+    """
+    ID of the project the sprints belong to
+    """
+    projectId: UUID!
+    """
+    IDs of the sprints to delete
+    """
+    sprintIds: [UUID!]!
+  ): Int!
+  """
+  Creates a new special day
+  """
+  specialDayCreate(
+    """
+    Data for the new special day
+    """
+    specialday: SpecialDayAdd!
+  ): SpecialDay
+  """
+  Updates an existing special day
+  """
+  specialDayUpdate(
+    """
+    Input identifying the special day to update
+    """
+    input: SpecialDayInput!
+    """
+    New values to apply to the special day
+    """
+    change: SpecialDayChange!
+  ): SpecialDay
+  """
+  Deletes a special day
+  """
+  specialDayDelete(
+    """
+    Input identifying the special day to delete
+    """
+    input: SpecialDayInput!
+  ): Int!
+}
+
+"""
+ISO 8601 calendar date without timezone.
+Format: %Y-%m-%d
+
+# Examples
+
+* `1994-11-13`
+* `2000-02-24`
+"""
+scalar NaiveDate
+
+"""
+Base notification interface
+"""
+interface Notification {
+  """
+  Unique identifier for the notification
+  """
+  id: UUID!
+  """
+  ID of the user who should receive this notification
+  """
+  recipientUserId: UUID!
+  """
+  ID of the user whose action triggered this notification
+  """
+  actorUserId: UUID!
+  """
+  State of the entity that triggered this notification
+  """
+  entityState: NotificationEntityState!
+  """
+  ID of the project (required for all notification types)
+  """
+  projectId: UUID
+  """
+  When this notification was created
+  """
+  createdAt: Timestamp!
+  """
+  When this notification was last updated
+  """
+  updatedAt: Timestamp!
+}
+
+"""
+Represents a deleted notification in subscription events
+"""
+type NotificationDeleted {
+  """
+  The unique identifier of the deleted notification
+  """
+  id: UUID!
+  """
+  The user ID who owned this notification (for filtering)
+  """
+  recipientUserId: UUID!
+}
+
+"""
+GraphQL enum for notification entity states
+"""
+enum NotificationEntityState {
+  """
+  Entity was created
+  """
+  CREATED
+  """
+  Entity was updated
+  """
+  UPDATED
+}
+
+"""
+Relay-style page info
+"""
+type PageInfo {
+  """
+  Whether there are more pages after this one
+  """
+  hasNextPage: Boolean!
+  """
+  Whether there are pages before this one
+  """
+  hasPreviousPage: Boolean!
+  """
+  Cursor of the first edge in this page
+  """
+  startCursor: String
+  """
+  Cursor of the last edge in this page
+  """
+  endCursor: String
+}
+
+"""
+User-created content item in the system
+"""
+type Post {
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Project this post belongs to
+  """
+  projectId: UUID!
+  """
+  Content in Delta format
+  """
+  description: Delta
+  """
+  Associated tags
+  """
+  tags: [String!]!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  User reactions
+  """
+  reactions: ItemReactions!
+  """
+  Creator user ID
+  """
+  createdBy: UUID!
+  """
+  Last updater user ID
+  """
+  updatedBy: UUID!
+  """
+  Attached media files
+  """
+  media: [Media!]!
+  """
+  Associated products
+  """
+  products: [Product!]!
+  """
+  Parent project
+  """
+  project: Project!
+  """
+  User who created this post
+  """
+  createdByUser: User!
+  """
+  User who last updated this post
+  """
+  updatedByUser: User!
+  """
+  Comments on this post
+  """
+  comments: [PostComment!]!
+  """
+  Number of comments
+  """
+  commentsCount: Int!
+}
+
+"""
+Input type for creating a new post
+"""
+input PostAdd {
+  """
+  Project ID that the post belongs to
+  """
+  projectId: UUID!
+  """
+  List of products that the post is associated with
+  """
+  productIds: [UUID!]!
+  """
+  Optional post description in Delta format
+  """
+  description: Delta
+  """
+  List of tags associated with the post
+  """
+  tags: [String!]!
+  """
+  List of file uploads to attach to the post
+  """
+  uploads: [Upload!]!
+}
+
+"""
+Input type for creating a post without authentication
+"""
+input PostAddBlind {
+  """
+  Information about the user creating the post
+  """
+  userBy: UserBy!
+  """
+  Project code (not ID) to associate the post with
+  """
+  projectCode: String!
+  """
+  List of product paths to associate with the post
+  """
+  productPaths: [String!]!
+  """
+  Optional post description in Delta format
+  """
+  description: Delta
+  """
+  List of tags associated with the post
+  """
+  tags: [String!]!
+  """
+  List of file uploads to attach to the post
+  """
+  uploads: [Upload!]!
+}
+
+"""
+Input type for updating an existing post
+"""
+input PostChange {
+  """
+  Updated list of product IDs
+  """
+  productIds: [UUID!]
+  """
+  Updated post description
+  """
+  description: Delta
+  """
+  Updated list of tags
+  """
+  tags: [String!]
+  """
+  New files to upload and attach to the post
+  """
+  uploads: [Upload!]!
+  """
+  List of media IDs to delete from the post
+  """
+  deleteMedia: [UUID!]!
+  """
+  Ordered list of media IDs to specify the display order
+  """
+  mediaOrder: [UUID!]!
+}
+
+"""
+Comment on a post
+"""
+type PostComment {
+  """
+  Project ID
+  """
+  projectId: UUID!
+  """
+  Post ID
+  """
+  postId: UUID!
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Parent comment ID if this is a reply
+  """
+  replyTo: UUID
+  """
+  Attached media ID
+  """
+  mediaId: UUID
+  """
+  Comment content in Delta format
+  """
+  comment: Delta
+  """
+  Additional metadata
+  """
+  details: JSON!
+  """
+  Whether details are stored in file system
+  """
+  hasStoredDetails: Boolean!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Creator ID
+  """
+  createdBy: UUID!
+  """
+  Creator user
+  """
+  createdByUser: User!
+  """
+  Parent comment
+  """
+  replyToComment: PostComment
+}
+
+"""
+Input for creating a new post comment
+"""
+input PostCommentAdd {
+  """
+  UUID of the project
+  """
+  projectId: UUID!
+  """
+  UUID of the post to comment on
+  """
+  postId: UUID!
+  """
+  Optional UUID of another comment that this comment is replying to
+  """
+  replyTo: UUID
+  """
+  Optional UUID of an existing media item to attach to this comment
+  """
+  mediaId: UUID
+  """
+  Comment content in Delta format
+  """
+  comment: Delta
+  """
+  Additional structured metadata for the comment
+  """
+  details: JSON
+  """
+  Media files to be uploaded and attached to this comment
+  """
+  mediaUploads: [Upload!]!
+  """
+  Optional Sketch upload containing a zip file and thumbnail
+  """
+  sketch: SketchUpload
+}
+
+"""
+Input for updating an existing post comment
+"""
+input PostCommentChange {
+  """
+  New comment content in Delta format (use MaybeUndefined to distinguish between null and undefined)
+  """
+  comment: Delta
+  """
+  New structured metadata for the comment (use MaybeUndefined to distinguish between null and undefined)
+  """
+  details: JSON
+  """
+  New media files to be uploaded and attached to this comment
+  """
+  mediaUploads: [Upload!]!
+  """
+  List of media UUIDs to delete from this comment
+  """
+  deleteMedia: [UUID!]!
+  """
+  Ordered list of media UUIDs to set the display order of attached media
+  """
+  mediaOrder: [UUID!]!
+  """
+  Sketch upload containing a zip file and thumbnail (use MaybeUndefined to distinguish between null and undefined)
+  """
+  sketch: SketchUpload
+}
+
+"""
+Represents a deleted post comment in subscription events
+"""
+type PostCommentDeleted {
+  """
+  The unique identifier of the deleted comment
+  """
+  id: UUID!
+}
+
+"""
+Notification for post comment events
+"""
+type PostCommentNotification implements Notification {
+  """
+  Unique identifier for the notification
+  """
+  id: UUID!
+  """
+  ID of the user who should receive this notification
+  """
+  recipientUserId: UUID!
+  """
+  ID of the user whose action triggered this notification
+  """
+  actorUserId: UUID!
+  """
+  State of the entity that triggered this notification
+  """
+  entityState: NotificationEntityState!
+  """
+  ID of the project (required for all notification types)
+  """
+  projectId: UUID
+  """
+  ID of the post
+  """
+  postId: UUID!
+  """
+  ID of the post comment
+  """
+  postCommentId: UUID!
+  """
+  When this notification was created
+  """
+  createdAt: Timestamp!
+  """
+  When this notification was last updated
+  """
+  updatedAt: Timestamp!
+  """
+  The post that this notification is about
+  """
+  post: Post!
+  """
+  The user who performed the action that triggered this notification
+  """
+  actorUser: User!
+  """
+  The user who should receive this notification
+  """
+  recipientUser: User!
+}
+
+"""
+Represents a deleted post notification
+"""
+type PostDeleted {
+  """
+  Unique identifier of the deleted post
+  """
+  id: UUID!
+}
+
+"""
+Notification for post events
+"""
+type PostNotification implements Notification {
+  """
+  Unique identifier for the notification
+  """
+  id: UUID!
+  """
+  ID of the user who should receive this notification
+  """
+  recipientUserId: UUID!
+  """
+  ID of the user whose action triggered this notification
+  """
+  actorUserId: UUID!
+  """
+  State of the entity that triggered this notification
+  """
+  entityState: NotificationEntityState!
+  """
+  ID of the project (required for all notification types)
+  """
+  projectId: UUID
+  """
+  ID of the post
+  """
+  postId: UUID!
+  """
+  When this notification was created
+  """
+  createdAt: Timestamp!
+  """
+  When this notification was last updated
+  """
+  updatedAt: Timestamp!
+  """
+  The post that this notification is about
+  """
+  post: Post!
+  """
+  The user who performed the action that triggered this notification
+  """
+  actorUser: User!
+  """
+  The user who should receive this notification
+  """
+  recipientUser: User!
+}
+
+"""
+Cursor for paginating post results
+"""
+input PostsCursor {
+  """
+  Timestamp of the last post in the previous page
+  """
+  lastTime: Timestamp!
+  """
+  ID of the last post in the previous page
+  """
+  lastId: UUID!
+}
+
+"""
+Filter criteria for post queries
+"""
+input PostsInputFilter {
+  """
+  Filter by project ID
+  """
+  projectId: UUID
+  """
+  Filter by a list of product IDs
+  """
+  productIds: [UUID!]
+  """
+  Filter by a list of chunk IDs
+  """
+  chunkIds: [UUID!]
+  """
+  Filter by a list of user IDs
+  """
+  userIds: [UUID!]
+  """
+  Filter by text in the description
+  """
+  description: String
+  """
+  Tags that must be present on the post
+  """
+  postTagsInclude: [String!]
+  """
+  Tags that must not be present on the post
+  """
+  postTagsExclude: [String!]
+  """
+  Tags that must be present on the products associated with the post
+  """
+  productTagsInclude: [String!]
+  """
+  Tags that must not be present on the products associated with the post
+  """
+  productTagsExclude: [String!]
+}
+
+"""
+Pagination parameters for post queries
+"""
+input PostsInputPagination {
+  """
+  Cursor indicating where to start fetching results
+  """
+  after: PostsCursor
+  """
+  Maximum number of results to return
+  """
+  limit: Int!
+}
+
+"""
+Product entity
+"""
+type Product {
+  """
+  Parent project
+  """
+  projectId: UUID!
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Parent product, if any
+  """
+  parentId: UUID
+  """
+  Unique short identifier used in API calls and references
+  """
+  code: String!
+  """
+  Type classification as either a container group or deliverable product
+  """
+  kind: ProductKind!
+  """
+  Rich text description in Delta format
+  """
+  description: Delta
+  """
+  Thumbnail image reference
+  """
+  thumbnail: String
+  """
+  Whether this is a deliverable
+  """
+  deliverable: Boolean
+  """
+  Current status
+  """
+  status: ProductStatusEnum
+  """
+  Completion deadline
+  """
+  dueDate: NaiveDate
+  """
+  Progress percentage toward completion from 0.0 to 100.0
+  """
+  progress: Float
+  """
+  Estimated hours to complete
+  """
+  estimation: Int
+  """
+  Total estimated hours including children
+  """
+  estimationSum: Int!
+  """
+  Total spent hours including children
+  """
+  spentSum: Float!
+  """
+  Associated tags
+  """
+  tags: [String!]!
+  """
+  Depth level in product hierarchy, starting from 0
+  """
+  depth: Int!
+  """
+  Number of direct child products. Counts only immediate children, not descendants.
+  """
+  childrenCount: Int!
+  """
+  Number of direct child product groups. Counts only immediate children of type GROUP, deeper descendants are not included.
+  """
+  childrenGroupsCount: Int!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Creator ID
+  """
+  createdBy: UUID!
+  """
+  Last updater ID
+  """
+  updatedBy: UUID!
+  """
+  Path to thumbnail image
+  """
+  thumbnailPath: String
+  """
+  Direct child products
+  """
+  children: [Product!]!
+  """
+  Ordered list of Ancestors of this product
+  """
+  path: [ProductAncestor!]!
+  """
+  Creator user
+  """
+  createdByUser: User!
+  """
+  Last updater user
+  """
+  updatedByUser: User!
+}
+
+"""
+Input type for creating a new product
+"""
+input ProductAdd {
+  """
+  UUID of the project this product belongs to
+  """
+  projectId: UUID!
+  """
+  Optional UUID of the parent product (for creating hierarchies)
+  """
+  parentId: UUID
+  """
+  Unique code identifier for the product
+  """
+  code: String!
+  """
+  Type of product (Group or Product)
+  """
+  kind: ProductKind!
+  """
+  Optional detailed description of the product in Delta format
+  """
+  description: Delta
+  """
+  Optional image file to use as product thumbnail
+  """
+  thumbnail: Upload
+  """
+  Whether this product represents a deliverable
+  """
+  deliverable: Boolean
+  """
+  Current status of the product
+  """
+  status: ProductStatusEnum
+  """
+  Optional deadline for the product
+  """
+  dueDate: NaiveDate
+  """
+  Completion progress as a percentage (0.0 to 1.0)
+  """
+  progress: Float
+  """
+  Estimated time to complete in hours
+  """
+  estimation: Int
+  """
+  Tags associated with the product for categorization
+  """
+  tags: [String!]!
+}
+
+"""
+Product ancestor in hierarchy
+"""
+type ProductAncestor {
+  """
+  Ancestor ID
+  """
+  id: UUID!
+  """
+  Ancestor code
+  """
+  code: String!
+}
+
+"""
+Input type for updating product fields
+"""
+input ProductChange {
+  """
+  New parent product ID (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  parentId: UUID
+  """
+  New product code
+  """
+  code: String
+  """
+  Updated product description (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  description: Delta
+  """
+  New thumbnail image (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  thumbnail: Upload
+  """
+  Whether this product represents a deliverable (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  deliverable: Boolean
+  """
+  Updated product status (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  status: ProductStatusEnum
+  """
+  Updated deadline (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  dueDate: NaiveDate
+  """
+  Updated progress percentage (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  progress: Float
+  """
+  Updated time estimation (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  estimation: Int
+  """
+  Updated product tags (if provided, replaces all existing tags)
+  """
+  tags: StringsUpdate
+}
+
+"""
+Input type for updating common product fields
+"""
+input ProductCommonChange {
+  """
+  New parent product ID (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  parentId: UUID
+  """
+  New product code
+  """
+  code: String
+  """
+  Updated product description (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  description: Delta
+  """
+  Optional deadline for the product
+  """
+  dueDate: NaiveDate
+  """
+  Updated time estimation (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  estimation: Int
+}
+
+"""
+Representation of a product deletion event
+"""
+type ProductDeleted {
+  """
+  Unique identifier of the deleted product
+  """
+  id: UUID!
+}
+
+"""
+Product filter criteria
+"""
+input ProductFilter {
+  """
+  Text to search in descriptions
+  """
+  description: String
+  """
+  Required tags
+  """
+  tagsInclude: [String!]!
+  """
+  Excluded tags
+  """
+  tagsExclude: [String!]!
+}
+
+"""
+Input type for updating product group fields
+"""
+input ProductGroupChange {
+  """
+  New parent product ID (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  parentId: UUID
+  """
+  New product code
+  """
+  code: String
+  """
+  Updated product description (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  description: Delta
+  """
+  Optional deadline for the product
+  """
+  dueDate: NaiveDate
+  """
+  Updated time estimation (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  estimation: Int
+}
+
+"""
+Product types
+"""
+enum ProductKind {
+  """
+  Container for other products
+  """
+  GROUP
+  """
+  Deliverable item
+  """
+  PRODUCT
+}
+
+type ProductSpentReport {
+  """
+  Date of this report
+  """
+  reportDate: NaiveDate!
+  """
+  Hours spent on this date
+  """
+  spentHours: Float!
+  """
+  Cumulative hours up to this date
+  """
+  rollingSum: Float!
+  """
+  User-specific time records
+  """
+  users: [ProductSpentUserReport!]!
+}
+
+type ProductSpentUserReport {
+  """
+  User who recorded time
+  """
+  userId: UUID!
+  """
+  Hours spent by this user
+  """
+  spentHours: Float!
+  """
+  Associated user
+  """
+  user: User!
+}
+
+"""
+Task status statistics for a product stage
+"""
+type ProductStage {
+  """
+  Project ID
+  """
+  projectId: UUID!
+  """
+  Product ID
+  """
+  productId: UUID!
+  """
+  Associated tags
+  """
+  tags: [String!]!
+  """
+  Task status
+  """
+  taskStatus: TaskStatusEnum!
+  """
+  Number of tasks
+  """
+  tasksCount: Int!
+}
+
+"""
+Product status values
+"""
+enum ProductStatusEnum {
+  """
+  Currently active and being worked on
+  """
+  ACTIVE
+  """
+  Finished and delivered
+  """
+  COMPLETED
+  """
+  Development canceled
+  """
+  CANCELED
+}
+
+"""
+Product ordering options
+"""
+input ProductsOrder {
+  """
+  Field to order by
+  """
+  field: ProductsOrderField!
+  """
+  Sort direction
+  """
+  ascending: Boolean!
+}
+
+"""
+Product ordering fields
+"""
+enum ProductsOrderField {
+  """
+  Code identifier
+  """
+  CODE
+  """
+  Total estimated hours
+  """
+  ESTIMATION_SUM
+  """
+  Total spent hours
+  """
+  SPENT_SUM
+  """
+  Current status
+  """
+  STATUS
+  """
+  Last update time
+  """
+  UPDATED_AT
+}
+
+"""
+Input filter for product stage queries
+"""
+input ProductsStageFilter {
+  """
+  UUID of the project
+  """
+  projectId: UUID!
+  """
+  List of product IDs
+  """
+  products: [UUID!]!
+}
+
+"""
+Project entity
+"""
+type Project {
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Unique short identifier used in API calls and references
+  """
+  code: String!
+  """
+  Human-readable title of the project
+  """
+  title: String!
+  """
+  Rich text description in Delta format
+  """
+  description: Delta
+  """
+  Priority level of the project
+  """
+  priority: Int!
+  """
+  Manual estimation in hours
+  """
+  estimation: Estimation
+  """
+  Hash reference to thumbnail image
+  """
+  thumbnail: String
+  """
+  Total chunk estimations
+  """
+  estimationChunkSum: Estimation!
+  """
+  Total product estimations
+  """
+  estimationProductSum: Estimation!
+  """
+  Total time spent
+  """
+  spentSum: Estimation!
+  """
+  Associated tags
+  """
+  tags: [String!]!
+  """
+  Deadline for the project, if applicable
+  """
+  dueDate: NaiveDate
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Timestamp when the project was marked as completed or archived
+  """
+  doneAt: Timestamp
+  """
+  Creator ID
+  """
+  createdBy: UUID!
+  """
+  Last updater ID
+  """
+  updatedBy: UUID!
+  """
+  Path to thumbnail image
+  """
+  thumbnailPath: String
+  """
+  Short path identifier
+  """
+  path: String!
+  """
+  Creator user
+  """
+  createdByUser: User!
+  """
+  Last updater user
+  """
+  updatedByUser: User!
+  """
+  Count of products to be delivered for this project
+  """
+  productsToDeliverCount: Int!
+  """
+  Average progress of the project
+  """
+  progress: Float!
+  """
+  Spent speed of the project
+  """
+  spentSpeed: Float!
+}
+
+"""
+Input type for creating a new project
+"""
+input ProjectAdd {
+  """
+  Unique code identifier for the project
+  """
+  code: String!
+  """
+  Display title of the project
+  """
+  title: String!
+  """
+  Rich text description of the project
+  """
+  description: Delta
+  """
+  Priority level of the project
+  """
+  priority: Int!
+  """
+  Estimated hours for the project
+  """
+  estimation: Int
+  """
+  Project thumbnail image
+  """
+  thumbnail: Upload
+  """
+  Tags for categorizing the project
+  """
+  tags: [String!]!
+  """
+  Project deadline, if applicable
+  """
+  dueDate: NaiveDate
+  """
+  Project completion date, if already completed
+  """
+  doneAt: Timestamp
+}
+
+"""
+Input type for updating an existing project
+"""
+input ProjectChange {
+  """
+  New project code (optional)
+  """
+  code: String
+  """
+  New project title (optional)
+  """
+  title: String
+  """
+  New project description (optional, can be set to null)
+  """
+  description: Delta
+  """
+  New project priority
+  """
+  priority: Int
+  """
+  New project estimation (optional, can be set to null)
+  """
+  estimation: Int
+  """
+  New project thumbnail (optional, can be set to null)
+  """
+  thumbnail: Upload
+  """
+  New project tags (optional)
+  """
+  tags: StringsUpdate
+  """
+  New project deadline (optional, can be set to null)
+  """
+  dueDate: NaiveDate
+  """
+  Project completion date (optional, can be set to null)
+  """
+  doneAt: Timestamp
+}
+
+"""
+Represents a deleted project notification
+"""
+type ProjectDeleted {
+  """
+  Unique identifier of the deleted project
+  """
+  id: UUID!
+}
+
+"""
+Collection of spent time records for a single project
+"""
+type ProjectSpentsRecord {
+  """
+  ID of the project these records belong to
+  """
+  projectId: UUID!
+  """
+  Time records for this project by date
+  """
+  spents: [SpentTimeRecord!]!
+  """
+  Resolves the complete project information for these time records
+  """
+  project: Project!
+}
+
+"""
+Top-level container for project distribution chart data
+"""
+type ProjectsDistribution {
+  """
+  Collection of project spend records
+  """
+  projects: [ProjectSpentsRecord!]!
+  """
+  The earliest date in the distribution data
+  """
+  start: NaiveDate
+  """
+  The latest date in the distribution data
+  """
+  end: NaiveDate
+}
+
+"""
+Input object for specifying how projects should be ordered
+"""
+input ProjectsOrder {
+  """
+  Field to order by
+  """
+  field: ProjectsOrderField!
+  """
+  Sort in ascending (true) or descending (false) order
+  """
+  ascending: Boolean!
+}
+
+"""
+Enum of fields that can be used for ordering projects
+"""
+enum ProjectsOrderField {
+  """
+  Order by project title (alphabetically)
+  """
+  TITLE
+  """
+  Order by the project code (alphabetically)
+  """
+  CODE
+  """
+  Order by project priority
+  """
+  PRIORITY
+}
+
+type Query {
+  """
+  Returns the claims of the currently authenticated user. If no user is authenticated, returns `None`.
+  """
+  whoami: Claims
+  """
+  Retrieve a summary for the authenticated user, indicating if they have any unconfirmed or unfilled reports.
+  """
+  userSummary(
+    """
+    The identifier for the user whose summary is to be retrieved
+    """
+    userBy: UserBy!
+  ): [UserSummaryRecord!]!
+  """
+  Returns the authenticated user's claims if they are logged in.
+  """
+  strictWhoami: Claims
+  """
+  Get the currently authenticated user
+  """
+  currentUser: User!
+  """
+  Get a user by their id
+  """
+  user(
+    """
+    ID of the user to retrieve
+    """
+    userId: UUID!
+  ): User
+  """
+  Get all users
+  """
+  users(
+    """
+    If provided, filters users by active status
+    """
+    active: Boolean
+  ): [User!]!
+  """
+  Get multiple users by their IDs
+  """
+  usersByIds(
+    """
+    List of user IDs to retrieve, or null to get all users
+    """
+    userIds: [UUID!]
+  ): [User!]!
+  """
+  Get the most common user tags
+  """
+  usersTagCloud(
+    """
+    Maximum number of tags to return
+    """
+    limit: Int!
+  ): [String!]!
+  """
+  Retrieves a single team by ID
+  """
+  team(
+    """
+    The UUID of the team to retrieve
+    """
+    teamId: UUID!
+  ): Team
+  """
+  Retrieves a list of all teams
+  """
+  teams(
+    """
+    Optional filter to only show active teams
+    """
+    active: Boolean
+  ): [Team!]!
+  """
+  Retrieves a chunk by ID
+  """
+  chunk(
+    """
+    The UUID of the chunk to retrieve
+    """
+    chunkId: UUID!
+  ): Chunk!
+  """
+  Retrieves chunks with expanded information
+  """
+  chunksExpanded(
+    """
+    The UUID of the project to filter chunks by
+    """
+    projectId: UUID!
+    """
+    Optional UUID of the root chunk to filter by
+    """
+    root: UUID
+    """
+    List of chunk IDs to retrieve
+    """
+    chunkIds: [UUID!]!
+    """
+    List of product IDs to filter by
+    """
+    products: [UUID!]!
+    """
+    List of user IDs to filter by
+    """
+    users: [UUID!]!
+    """
+    Optional description filter
+    """
+    description: String
+    """
+    Boolean flag to hide completed chunks
+    """
+    hideDone: Boolean!
+    """
+    List of ordering criteria for the chunks
+    """
+    orders: [ChunksOrder!]!
+  ): [Chunk!]!
+  """
+  Retrieves chunks by their IDs
+  """
+  chunks(
+    """
+    List of UUIDs representing the chunks to retrieve
+    """
+    chunkIds: [UUID!]!
+  ): [Chunk!]!
+  """
+  Gets ancestors for the given projects
+  """
+  chunkAncestors(
+    """
+    The UUID of the project to filter chunks by
+    """
+    projectId: UUID!
+    """
+    List of chunk IDs to retrieve ancestors for
+    """
+    chunkIds: [UUID!]!
+    """
+    Boolean flag to include siblings of the chunks
+    """
+    withSiblings: Boolean!
+  ): [Chunk!]!
+  """
+  Retrieves descendant chunks for given ancestor IDs
+  """
+  chunkDescendants(
+    """
+    The UUID of the project to filter chunks by
+    """
+    projectId: UUID!
+    """
+    List of ancestor chunk IDs to retrieve descendants for
+    """
+    ancestorIds: [UUID!]!
+    """
+    Boolean flag to include ancestors in the result
+    """
+    includeAncestors: Boolean!
+    """
+    Optional maximum depth for the descendants
+    """
+    maxDepth: Int
+  ): [Chunk!]!
+  """
+  Retrieves product stage information
+  """
+  productsStage(
+    """
+    Filter criteria for product stages
+    """
+    filter: ProductsStageFilter!
+    """
+    List of tag groups to filter by
+    """
+    tagGroups: [[String!]!]!
+  ): [ProductStage!]!
+  """
+  Fetches a single report by its identifying fields
+  """
+  report(
+    """
+    The report identifier input
+    """
+    where: ReportInput!
+  ): Report!
+  """
+  Fetches multiple reports based on filter criteria
+  """
+  reports(
+    """
+    Filter criteria for reports
+    """
+    where: ReportsInput!
+    """
+    Optional ordering information
+    """
+    order: ReportsOrder
+  ): [Report!]!
+  """
+  Get a project by ID
+  """
+  project(
+    """
+    ID of the project to retrieve
+    """
+    projectId: UUID!
+  ): Project!
+  """
+  Get all projects
+  """
+  projects(
+    """
+    Optional filter to return only active or inactive projects
+    """
+    active: Boolean
+    """
+    List of ordering criteria for the projects
+    """
+    orders: [ProjectsOrder!]!
+  ): [Project!]!
+  """
+  Get most frequently used project tags
+  """
+  projectsTagCloud(
+    """
+    Maximum number of tags to return
+    """
+    limit: Int!
+  ): [String!]!
+  """
+  Get a product by ID
+  """
+  product(
+    """
+    Product ID
+    """
+    productId: UUID!
+  ): Product!
+  """
+  Get multiple products by IDs
+  """
+  products(
+    """
+    List of product IDs
+    """
+    productIds: [UUID!]!
+  ): [Product!]!
+  """
+  Get products with hierarchy information
+  """
+  productsExpanded(
+    """
+    Project ID
+    """
+    projectId: UUID!
+    """
+    Optional root product ID
+    """
+    root: UUID
+    """
+    Product IDs to expand
+    """
+    productIds: [UUID!]!
+    """
+    Text filter for descriptions
+    """
+    description: String
+    """
+    Required tags
+    """
+    tagsInclude: [String!]!
+    """
+    Excluded tags
+    """
+    tagsExclude: [String!]!
+    """
+    Whether to show only products with given statuses
+    """
+    status: [ProductStatusEnum!]!
+    """
+    Whether to show only deliverable products
+    """
+    deliverable: Boolean
+    """
+    Sorting options
+    """
+    orders: [ProductsOrder!]!
+  ): [Product!]!
+  """
+  Get product descendants
+  """
+  productDescendants(
+    """
+    Project ID
+    """
+    projectId: UUID!
+    """
+    Parent product IDs
+    """
+    ancestorIds: [UUID!]!
+    """
+    Whether to include parents
+    """
+    includeAncestors: Boolean!
+    """
+    Filter criteria
+    """
+    filter: ProductFilter!
+    """
+    Maximum hierarchy depth
+    """
+    maxDepth: Int
+  ): [Product!]!
+  """
+  Get product ancestors
+  """
+  productAncestors(
+    """
+    Project ID
+    """
+    projectId: UUID!
+    """
+    Product IDs to find ancestors for
+    """
+    productIds: [UUID!]!
+    """
+    Whether to include sibling products
+    """
+    withSiblings: Boolean!
+  ): [Product!]!
+  """
+  Get most common product tags
+  """
+  productsTagCloud(
+    """
+    Optional project to filter by
+    """
+    projectId: UUID
+    """
+    Maximum tags to return
+    """
+    limit: Int!
+  ): [String!]!
+  """
+  Retrieves tasks based on provided filters
+  """
+  tasks(
+    """
+    Optional filter for project-specific tasks
+    """
+    projectFilter: TaskBoardFilter
+    """
+    List of tags to include in the search
+    """
+    tagsInclude: [String!]!
+    """
+    List of tags to exclude from the search
+    """
+    tagsExclude: [String!]!
+    """
+    Optional text to search for in task descriptions
+    """
+    description: String
+    """
+    List of user IDs to filter tasks by
+    """
+    users: [UUID!]!
+    """
+    List of ordering specifications for the results
+    """
+    orders: [ChunksOrder!]!
+  ): [Task!]!
+  """
+  Retrieves the most used tags for tasks
+  """
+  tasksTagCloud(
+    """
+    Optional UUID of the project to filter tags by
+    """
+    projectId: UUID
+    """
+    Maximum number of tags to return
+    """
+    limit: Int!
+  ): [String!]!
+  """
+  Retrieves a list of epics based on the provided filters and ordering
+  """
+  epics(
+    """
+    List of project IDs to filter epics by
+    """
+    projects: [UUID!]!
+    """
+    List of user IDs to filter epics by
+    """
+    users: [UUID!]!
+    """
+    Optional text to search for in epic descriptions
+    """
+    description: String
+    """
+    List of ordering specifications for the results
+    """
+    orders: [ChunksOrder!]!
+  ): [Epic!]!
+  """
+  Retrieves epics that are not covered by sprints in a given date range
+  """
+  epicsNotCoveredBySprints(
+    """
+    ID of the project to search for epics in
+    """
+    project: UUID!
+    """
+    List of statuses to filter epics by
+    """
+    epicStatuses: [EpicStatusEnum!]!
+    """
+    Date range to check for sprint coverage
+    """
+    range: DateRange!
+  ): [Epic!]!
+  """
+  Retrieves consolidated metric reports for users over a date range
+  """
+  metricReports(
+    """
+    Start date for the report period (inclusive)
+    """
+    dateFrom: NaiveDate!
+    """
+    End date for the report period (inclusive)
+    """
+    dateTo: NaiveDate!
+    """
+    Maximum depth in the product hierarchy to include (1-4)
+    """
+    hierarchyLevel: Int!
+    """
+    Optional list of user IDs to filter by
+    """
+    usersSubset: [UUID!]
+    """
+    Optional list of user tags to include
+    """
+    userTagsInclude: [String!]
+    """
+    Optional list of user tags to exclude
+    """
+    userTagsExclude: [String!]
+  ): [MetricReports!]!
+  """
+  Retrieves consolidated special days reports for users over a date range
+  """
+  metricSpecialDays(
+    """
+    Start date for the report period (inclusive)
+    """
+    dateFrom: NaiveDate!
+    """
+    End date for the report period (inclusive)
+    """
+    dateTo: NaiveDate!
+    """
+    Optional list of user IDs to filter by
+    """
+    usersSubset: [UUID!]
+    """
+    Optional list of user tags to include
+    """
+    userTagsInclude: [String!]
+    """
+    Optional list of user tags to exclude
+    """
+    userTagsExclude: [String!]
+  ): [MetricSpecialDays!]!
+  """
+  Retrieves time spent reports for chunks (tasks/epics) by date
+  """
+  chunkSpentReport(
+    """
+    UUID of the project to get reports for
+    """
+    projectId: UUID!
+    """
+    Optional UUID of a specific chunk to filter reports to
+    """
+    chunkId: UUID
+  ): [ChunkSpentReport!]!
+  """
+  Retrieves time spent reports for products by date
+  """
+  productSpentReport(
+    """
+    UUID of the project to get reports for
+    """
+    projectId: UUID!
+    """
+    UUID of the specific product to get reports for
+    """
+    productId: UUID!
+  ): [ProductSpentReport!]!
+  """
+  Get a single company by ID.
+  """
+  company(
+    """
+    The unique identifier of the company to retrieve
+    """
+    companyId: Int!
+  ): Company!
+  """
+  Get all companies.
+  """
+  companies: [Company!]!
+  """
+  Get all domains.
+  """
+  domains: [Domain!]!
+  """
+  Retrieves a filtered and paginated list of posts
+  """
+  posts(
+    """
+    Criteria to filter the posts by
+    """
+    filter: PostsInputFilter!
+    """
+    Controls how many posts to return and from where to start
+    """
+    pagination: PostsInputPagination!
+  ): [Post!]!
+  """
+  Retrieves a single post by its ID
+  """
+  post(
+    """
+    Optional project ID to verify the post belongs to
+    """
+    projectId: UUID
+    """
+    The unique identifier of the post to retrieve
+    """
+    postId: UUID!
+  ): Post!
+  """
+  Retrieves a tag cloud for posts
+  """
+  postsTagCloud(
+    """
+    Optional project ID to limit the tags to
+    """
+    projectId: UUID
+    """
+    Maximum number of tags to return
+    """
+    limit: Int!
+  ): [String!]!
+  """
+  Fetch medialists based on provided filters and pagination
+  using Relay-style connection pattern.
+  """
+  medialistsConnection(
+    """
+    Criteria to filter the medialists by
+    """
+    filter: MedialistsFilter!
+    """
+    Number of medialists to fetch
+    """
+    first: Int
+    """
+    Cursor to start after
+    """
+    after: String
+  ): MedialistConnection!
+  """
+  Fetch multiple medialists by their IDs.
+  """
+  medialistsByIds(
+    """
+    List of medialist IDs to retrieve
+    """
+    ids: [UUID!]!
+  ): [Medialist!]!
+  """
+  Retrieves a tag cloud for posts
+  """
+  medialistsTagCloud(
+    """
+    Maximum number of tags to return
+    """
+    limit: Int!
+  ): [String!]!
+  """
+  Fetches all comments for a specific post
+  """
+  postComments(
+    """
+    UUID of the post to fetch comments for
+    """
+    postId: UUID!
+  ): [PostComment!]!
+  """
+  Fetches a single comment by its ID
+  """
+  postComment(
+    """
+    Optional UUID of the project for access control
+    """
+    projectId: UUID
+    """
+    UUID of the comment to fetch
+    """
+    postCommentId: UUID!
+  ): PostComment!
+  """
+  Retrieves a list of media jobs for specified users.
+  """
+  mediajobs(
+    """
+    List of user IDs to filter the jobs by
+    """
+    userIds: [UUID!]!
+    """
+    Optional maximum number of jobs to return
+    """
+    limit: Int
+  ): [MediaJob!]!
+  """
+  Retrieves media items by their hash value within a specific project.
+  """
+  mediaByHash(
+    """
+    The UUID of the project to search in
+    """
+    projectId: UUID!
+    """
+    The hash value to search for
+    """
+    hash: String!
+  ): [Media!]!
+  """
+  Retrieves a media items by its unique identifiers.
+  """
+  mediaByIds(
+    """
+    List of media IDs to retrieve
+    """
+    mediaIds: [UUID!]!
+  ): [Media!]!
+  """
+  Retrieves notifications for the current user
+  """
+  notifications: [Notification!]!
+  """
+  Retrieves a single reporter by its ID
+  """
+  reporter(
+    """
+    The unique identifier of the reporter to retrieve
+    """
+    id: String!
+  ): Reporter!
+  """
+  Lists all available reporters
+  """
+  reporters: [Reporter!]!
+  """
+  Fetches historical team assignments for specified users
+  """
+  auditUserTeams(
+    """
+    List of user IDs to retrieve team history for
+    """
+    users: [UUID!]!
+  ): [AuditUserTeam!]!
+  """
+  Fetches data for visualizing time distribution across projects
+  """
+  projectsDistributionChart(
+    """
+    Optional start date for the analysis period
+    """
+    dateFrom: NaiveDate
+    """
+    Optional end date for the analysis period
+    """
+    dateTo: NaiveDate
+    """
+    List of user IDs whose time records should be included
+    """
+    userIds: [UUID!]!
+  ): ProjectsDistribution!
+  """
+  Retrieves all available reactions.
+  """
+  reactions: [String!]!
+  """
+  Get the date range for sprints matching the given criteria
+  """
+  sprintsDateRange(
+    """
+    The ID of the project to get sprints for
+    """
+    projectId: UUID!
+    """
+    List of user IDs to filter sprints by
+    """
+    userIds: [UUID!]!
+    """
+    List of tags that must be included
+    """
+    tagsInclude: [String!]!
+    """
+    List of tags that must be excluded
+    """
+    tagsExclude: [String!]!
+  ): SprintsDateRange
+  """
+  Get sprints matching the given filter criteria
+  """
+  sprintsFiltered(
+    """
+    Comprehensive filter criteria for sprints
+    """
+    filter: SprintsFilter!
+  ): [Sprint!]!
+  """
+  Get sprints by their IDs
+  """
+  sprints(
+    """
+    List of sprint IDs to retrieve
+    """
+    sprintIds: [UUID!]!
+  ): [Sprint!]!
+  """
+  Get a single sprint by ID and project
+  """
+  sprint(
+    """
+    The ID of the project to get sprints for
+    """
+    projectId: UUID!
+    """
+    The ID of the sprint to retrieve
+    """
+    sprintId: UUID!
+  ): Sprint!
+  """
+  Get a tag cloud for sprints
+  """
+  sprintsTagCloud(
+    """
+    Optional project ID to filter sprints by
+    """
+    projectId: UUID
+    """
+    Maximum number of tags to return
+    """
+    limit: Int!
+  ): [String!]!
+  """
+  Retrieves a single special day by user ID and date
+  """
+  specialDay(
+    """
+    Input specifying which special day to retrieve
+    """
+    where: SpecialDayInput!
+  ): SpecialDay!
+  """
+  Retrieves multiple special days based on date range and user filters
+  """
+  specialDays(
+    """
+    Input specifying date range and user filters
+    """
+    where: SpecialDaysInput!
+  ): [SpecialDay!]!
+  """
+  Retrieves all special day kinds
+  """
+  specialDayKinds: [SpecialDayKind!]!
+}
+
+"""
+Media job status values
+"""
+enum QueueStatus {
+  """
+  Waiting to be processed
+  """
+  QUEUED
+  """
+  Currently being processed
+  """
+  PROCESSING
+  """
+  Successfully completed
+  """
+  COMPLETED
+  """
+  Failed to process
+  """
+  FAILED
+}
+
+"""
+Represents a time report in the system
+"""
+type Report {
+  """
+  The date for which this time is being reported
+  """
+  reportDate: NaiveDate!
+  """
+  UUID of the task the time was spent on
+  """
+  taskId: UUID!
+  """
+  UUID of the user who performed the work
+  """
+  userId: UUID!
+  """
+  Number of hours spent on the task
+  """
+  spentHours: Int!
+  """
+  Whether this report has been confirmed by a manager
+  """
+  confirmed: Boolean!
+  """
+  Timestamp when the report was created
+  """
+  createdAt: Timestamp!
+  """
+  Timestamp when the report was last updated
+  """
+  updatedAt: Timestamp!
+  """
+  Retrieves the User who submitted this report
+  """
+  user: User!
+  """
+  Retrieves the Task this report is associated with
+  """
+  task: Task!
+}
+
+"""
+Input type for creating a new time report
+"""
+input ReportAdd {
+  """
+  The date for which this time report is being recorded
+  """
+  reportDate: NaiveDate!
+  """
+  UUID of the task the time was spent on
+  """
+  taskId: UUID!
+  """
+  UUID of the user who performed the work
+  """
+  userId: UUID!
+  """
+  Number of hours spent on the task
+  """
+  spentHours: Int!
+}
+
+"""
+Input type for updating an existing report
+"""
+input ReportChange {
+  """
+  New number of hours spent on the task
+  """
+  spentHours: Int!
+}
+
+"""
+Represents a deleted report in the subscription system
+"""
+type ReportDeleted {
+  """
+  The date the report was for
+  """
+  reportDate: NaiveDate!
+  """
+  The ID of the chunk (task) the report was associated with
+  """
+  taskId: UUID!
+  """
+  The ID of the user who made the report
+  """
+  userId: UUID!
+}
+
+"""
+Input type for identifying a specific report
+"""
+input ReportInput {
+  """
+  The date the report was made for
+  """
+  reportDate: NaiveDate!
+  """
+  ID of the task the report is for
+  """
+  taskId: UUID!
+  """
+  ID of the user who made the report
+  """
+  userId: UUID!
+}
+
+"""
+Reporter entity for GraphQL API
+"""
+type Reporter {
+  """
+  Unique identifier for the reporter
+  """
+  id: String!
+  """
+  Display name of the reporter
+  """
+  name: String!
+  """
+  Retrieves the parameters for this reporter from its configured endpoint
+  """
+  params: JSON!
+}
+
+"""
+Input type for filtering reports
+"""
+input ReportsInput {
+  """
+  Optional start date for filtering reports
+  """
+  reportDateFrom: NaiveDate
+  """
+  Optional end date for filtering reports
+  """
+  reportDateTo: NaiveDate
+  """
+  Optional list of task IDs to filter reports by
+  """
+  taskIds: [UUID!]
+  """
+  Optional list of user IDs to filter reports by
+  """
+  userIds: [UUID!]
+}
+
+"""
+Input type for specifying report ordering
+"""
+input ReportsOrder {
+  """
+  The field to order by
+  """
+  field: ReportsOrderField!
+  """
+  Whether to sort in ascending order (true) or descending order (false)
+  """
+  ascending: Boolean!
+}
+
+"""
+Enum defining possible fields for ordering reports
+"""
+enum ReportsOrderField {
+  """
+  Order by report date
+  """
+  REPORT_DATE
+  """
+  Order by creation timestamp
+  """
+  CREATED_AT
+  """
+  Order by last update timestamp
+  """
+  UPDATED_AT
+}
+
+"""
+Represents a screen resolution as a tuple of width and height
+"""
+scalar Resolution
+
+input SketchUpload {
+  """
+  Zip file containing the sketches in frames
+  """
+  sketchZip: Upload!
+  """
+  Thumbnail image for the sketch
+  """
+  thumbnail: Upload!
+}
+
+"""
+Special day entity for GraphQL API
+"""
+type SpecialDay {
+  """
+  UUID of the user for whom the special day is recorded
+  """
+  userId: UUID!
+  """
+  The date of the special day
+  """
+  day: NaiveDate!
+  """
+  ID of the special day kind (e.g., vacation, sick leave)
+  """
+  kindId: Int!
+  """
+  Whether this special day is confirmed
+  """
+  confirmed: Boolean!
+  """
+  UUID of the user who last updated this special day
+  """
+  updatedBy: UUID
+  """
+  Timestamp of when this special day was last updated
+  """
+  updatedAt: Timestamp!
+  """
+  User associated with this special day
+  """
+  user: User!
+  """
+  The kind of this special day
+  """
+  kind: SpecialDayKind!
+}
+
+"""
+Input data for creating a new special day
+"""
+input SpecialDayAdd {
+  """
+  The date of the special day
+  """
+  day: NaiveDate!
+  """
+  UUID of the user for whom the special day is recorded
+  """
+  userId: UUID!
+  """
+  Kind ID for the special day (e.g., vacation, sick leave)
+  """
+  kind: Int!
+  """
+  Optional reason for the special day
+  """
+  reason: String
+}
+
+"""
+Input data for updating an existing special day
+"""
+input SpecialDayChange {
+  """
+  New kind ID for the special day
+  """
+  kind: Int!
+  """
+  Optional reason for the special day
+  """
+  reason: String
+}
+
+"""
+Represents a deleted special day for subscription events
+"""
+type SpecialDayDeleted {
+  """
+  UUID of the user for whom the special day was recorded
+  """
+  userId: UUID!
+  """
+  The date of the deleted special day
+  """
+  day: NaiveDate!
+}
+
+"""
+Input for identifying a specific special day
+"""
+input SpecialDayInput {
+  """
+  UUID of the user for whom the special day is recorded
+  """
+  userId: UUID!
+  """
+  The date of the special day
+  """
+  day: NaiveDate!
+}
+
+"""
+Special day kinds for user schedule management
+"""
+type SpecialDayKind {
+  """
+  Unique numeric identifier
+  """
+  id: Int!
+  """
+  Short code (e.g., "vacation", "sick")
+  """
+  code: String!
+  """
+  Human-readable name
+  """
+  title: String!
+  """
+  Detailed description
+  """
+  description: String!
+}
+
+"""
+Input parameters for filtering special days
+"""
+input SpecialDaysInput {
+  """
+  Start date for filtering special days
+  """
+  dateFrom: NaiveDate
+  """
+  End date for filtering special days
+  """
+  dateTo: NaiveDate
+  """
+  Optional list of user IDs to filter by
+  """
+  userIds: [UUID!]
+}
+
+"""
+Record of time spent on a project for a specific date
+"""
+type SpentTimeRecord {
+  """
+  The date the time was spent
+  """
+  date: NaiveDate!
+  """
+  The number of hours spent on this date
+  """
+  spentHours: Int!
+}
+
+"""
+Time-boxed work period for completing specific tasks
+"""
+type Sprint {
+  """
+  Project ID
+  """
+  projectId: UUID!
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Human-readable title of the sprint
+  """
+  title: String!
+  """
+  Description in Delta format
+  """
+  description: Delta
+  """
+  Progress percentage toward completion from 0.0 to 100.0
+  """
+  progress: Float!
+  """
+  The scheduled start date of the sprint
+  """
+  startAt: NaiveDate!
+  """
+  The scheduled end date of the sprint
+  """
+  endAt: NaiveDate!
+  """
+  Associated tags
+  """
+  tags: [String!]!
+  """
+  Creator ID
+  """
+  createdBy: UUID!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last updater ID
+  """
+  updatedBy: UUID!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Parent project
+  """
+  project: Project!
+  """
+  Associated users
+  """
+  users: [User!]!
+  """
+  Associated products
+  """
+  products: [Product!]!
+  """
+  Tasks in this sprint
+  """
+  tasks: [Chunk!]!
+  """
+  Epics in this sprint
+  """
+  epics: [Chunk!]!
+  """
+  Creator user
+  """
+  createdByUser: User!
+  """
+  Last updater user
+  """
+  updatedByUser: User!
+}
+
+"""
+Input type for creating a new sprint
+"""
+input SprintAdd {
+  """
+  ID of the project this sprint belongs to
+  """
+  projectId: UUID!
+  """
+  Title or name of the sprint
+  """
+  title: String!
+  """
+  Optional detailed description of the sprint in Delta format
+  """
+  description: Delta
+  """
+  Completion progress of the sprint as a percentage (0.0 to 1.0)
+  """
+  progress: Float!
+  """
+  Start date of the sprint
+  """
+  startAt: NaiveDate!
+  """
+  End date of the sprint
+  """
+  endAt: NaiveDate!
+  """
+  Tags associated with the sprint
+  """
+  tags: [String!]!
+  """
+  IDs of users to associate with this sprint
+  """
+  userIds: [UUID!]!
+  """
+  IDs of products to associate with this sprint
+  """
+  productIds: [UUID!]!
+  """
+  IDs of tasks to include in this sprint
+  """
+  taskIds: [UUID!]!
+  """
+  IDs of epics to include in this sprint
+  """
+  epicIds: [UUID!]!
+}
+
+"""
+Input type for updating an existing sprint
+"""
+input SprintChange {
+  """
+  New title for the sprint
+  """
+  title: String
+  """
+  New description for the sprint
+  """
+  description: Delta
+  """
+  New progress value for the sprint
+  """
+  progress: Float
+  """
+  New start date for the sprint
+  """
+  startAt: NaiveDate
+  """
+  New end date for the sprint
+  """
+  endAt: NaiveDate
+  """
+  Tags to update on the sprint
+  """
+  tags: StringsUpdate
+  """
+  Users to update on the sprint
+  """
+  userIds: UuidsUpdate
+  """
+  New set of product IDs to associate with the sprint
+  """
+  productIds: [UUID!]
+  """
+  Tasks to update on the sprint
+  """
+  taskIds: UuidsUpdate
+  """
+  Epics to update on the sprint
+  """
+  epicIds: UuidsUpdate
+}
+
+"""
+Represents a deleted sprint
+"""
+type SprintDeleted {
+  """
+  Unique identifier of the deleted sprint
+  """
+  id: UUID!
+}
+
+"""
+Sprint date range information
+"""
+type SprintsDateRange {
+  """
+  Earliest start date
+  """
+  startAt: NaiveDate!
+  """
+  Latest end date
+  """
+  endAt: NaiveDate!
+}
+
+"""
+Input type for filtering sprints by various criteria
+"""
+input SprintsFilter {
+  """
+  Optional date range to filter sprints by
+  """
+  range: DateRange
+  """
+  Optional project filter criteria
+  """
+  project: SprintsProjectFilter
+  """
+  List of user IDs to filter by
+  """
+  users: [UUID!]!
+  """
+  List of tags that must be included
+  """
+  tagsInclude: [String!]!
+  """
+  List of tags that must be excluded
+  """
+  tagsExclude: [String!]!
+  """
+  List of ordering specifications
+  """
+  orders: [SprintsOrder!]!
+}
+
+"""
+Input type for ordering sprint query results
+"""
+input SprintsOrder {
+  """
+  Field to order sprints by
+  """
+  field: SprintsOrderField!
+  """
+  Whether to sort in ascending (true) or descending (false) order
+  """
+  ascending: Boolean!
+}
+
+"""
+Fields to order sprints by in queries
+"""
+enum SprintsOrderField {
+  """
+  Order by sprint title
+  """
+  TITLE
+  """
+  Order by sprint start date
+  """
+  START_AT
+  """
+  Order by sprint end date
+  """
+  END_AT
+  """
+  Order by completion status
+  """
+  COMPLETED
+  """
+  Order by creation date
+  """
+  CREATED_AT
+  """
+  Order by last update date
+  """
+  UPDATED_AT
+}
+
+"""
+Input type for filtering sprints by project
+"""
+input SprintsProjectFilter {
+  """
+  ID of the project to filter by
+  """
+  projectId: UUID!
+  """
+  List of task IDs to filter by
+  """
+  tasks: [UUID!]!
+  """
+  List of product IDs to filter by
+  """
+  products: [UUID!]!
+}
+
+"""
+Add/Remove vector for input objects
+"""
+input StringsAddRemove {
+  """
+  Items to add to the collection
+  """
+  add: [String!]!
+  """
+  Items to remove from the collection
+  """
+  remove: [String!]!
+}
+
+"""
+Enum for updating collections in GraphQL mutations
+"""
+input StringsUpdate @oneOf {
+  """
+  Replace the entire collection with this list
+  """
+  set: [String!]
+  """
+  Add and remove specific items from the collection
+  """
+  addRemove: StringsAddRemove
+}
+
+type Subscription {
+  """
+  Subscribes to user changes
+  """
+  userChanged: [User!]!
+  """
+  Subscribes to user deletions
+  """
+  usersDeleted: [UserDeleted!]!
+  """
+  Subscribes to team changes
+  """
+  teamChanged: [Team!]!
+  """
+  Subscribes to team deletions
+  """
+  teamsDeleted: [TeamDeleted!]!
+  """
+  Subscribes to changes in chunks
+  """
+  chunkChanged: [Chunk!]!
+  """
+  Subscribes to chunk deletion events
+  """
+  chunkDeleted: [ChunkDeleted!]!
+  """
+  Stream of assignments that are created or updated in the system
+  """
+  assignmentChanged: [Assignment!]!
+  """
+  Stream of assignments that are deleted from the system
+  """
+  assignmentDeleted: [AssignmentDeleted!]!
+  """
+  Subscribes to report change events
+  """
+  reportChanged: [Report!]!
+  """
+  Subscribes to report deletion events
+  """
+  reportDeleted: [ReportDeleted!]!
+  """
+  Stream of project updates when projects are created or modified
+  """
+  projectsChanged: [Project!]!
+  """
+  Stream of updates when projects are deleted from the system
+  """
+  projectsDeleted: [ProjectDeleted!]!
+  """
+  Stream of product change events
+  """
+  productsChanged: [Product!]!
+  """
+  Stream of product deletion events
+  """
+  productsDeleted: [ProductDeleted!]!
+  """
+  Subscribes to changes in post comments
+  """
+  postCommentsChanged: [PostComment!]!
+  """
+  Subscribes to post comment deletions
+  """
+  postCommentsDeleted: [PostCommentDeleted!]!
+  """
+  Subscribes to post creation and update events
+  """
+  postsChanged: [Post!]!
+  """
+  Subscribes to post deletion events
+  """
+  postsDeleted: [PostDeleted!]!
+  """
+  Subscribes to media job changes
+  """
+  mediaJobChanged(
+    """
+    Optional list of user IDs to filter notifications by. If empty, notifications for all users will be received.
+    """
+    userIds: [UUID!]!
+  ): [MediaJob!]!
+  """
+  Subscribes to media job deletions
+  """
+  mediaJobDeleted(
+    """
+    Optional list of user IDs to filter notifications by. If empty, notifications for all users will be received.
+    """
+    userIds: [UUID!]!
+  ): [MediaJobDeleted!]!
+  """
+  Subscribes to new notifications for a specific user or current user
+  """
+  notificationsChanged(
+    """
+    Optional user ID to filter notifications for. If not provided, uses current user.
+    """
+    userId: UUID
+  ): [Notification!]!
+  """
+  Subscribes to notification deletions for a specific user or current user
+  """
+  notificationsDeleted(
+    """
+    Optional user ID to filter notifications for. If not provided, uses current user.
+    """
+    userId: UUID
+  ): [NotificationDeleted!]!
+  """
+  Subscribe to sprint changes
+  """
+  sprintsChanged: [Sprint!]!
+  """
+  Subscribe to sprint deletions
+  """
+  sprintsDeleted: [SprintDeleted!]!
+  """
+  Subscribe to special day changes
+  """
+  specialDayChanged: [SpecialDay!]!
+  """
+  Subscribe to special day deletions
+  """
+  specialDayDeleted: [SpecialDayDeleted!]!
+  """
+  Subscribes to medialist creation and update events
+  """
+  medialistsChanged: [Medialist!]!
+  """
+  Subscribes to medialist deletion events
+  """
+  medialistsDeleted: [MedialistDeleted!]!
+}
+
+"""
+GraphQL object implementation for Task type
+"""
+type Task implements Chunk {
+  """
+  Project ID
+  """
+  projectId: UUID!
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Parent chunk ID
+  """
+  parentId: UUID
+  """
+  Title
+  """
+  title: String!
+  """
+  Rich text description
+  """
+  description: Delta
+  """
+  Estimated effort
+  """
+  estimation: Estimation
+  """
+  Total estimation including descendants
+  """
+  estimationSum: Estimation!
+  """
+  Total time spent including descendants
+  """
+  spentSum: Estimation!
+  """
+  Number of direct children
+  """
+  childrenCount: Int!
+  """
+  Depth level in chunk hierarchy, starting from 0
+  """
+  depth: Int!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Priority
+  """
+  priority: Int!
+  """
+  Deadline date, if present
+  """
+  dueDate: NaiveDate
+  """
+  Associated tags
+  """
+  tags: [String!]!
+  """
+  Current status
+  """
+  taskStatus: TaskStatusEnum!
+  """
+  Associated users
+  """
+  users: [User!]!
+  """
+  Associated sprints
+  """
+  sprints: [Sprint!]!
+  """
+  Associated project
+  """
+  project: Project!
+  """
+  Associated products
+  """
+  products: [Product!]!
+  """
+  Parent chunk
+  """
+  parent: Chunk
+  """
+  Active assignments
+  """
+  assignments: [Assignment!]!
+  """
+  Creator ID
+  """
+  createdBy: UUID!
+  """
+  Last updater ID
+  """
+  updatedBy: UUID!
+  """
+  Creator user
+  """
+  createdByUser: User!
+  """
+  Last updater user
+  """
+  updatedByUser: User!
+}
+
+"""
+Input for creating a new task
+"""
+input TaskAdd {
+  """
+  UUID of the project this task belongs to
+  """
+  projectId: UUID!
+  """
+  Optional parent chunk ID for task hierarchy
+  """
+  parentId: UUID
+  """
+  Title or name of the task
+  """
+  title: String!
+  """
+  Detailed description of the task in Delta format
+  """
+  description: Delta
+  """
+  Estimated time to complete in hours
+  """
+  estimation: Int
+  """
+  Task priority level (higher numbers = higher priority)
+  """
+  priority: Int
+  """
+  Due date for the task
+  """
+  dueDate: NaiveDate
+  """
+  List of user IDs to assign to this task
+  """
+  users: [UUID!]!
+  """
+  List of product IDs this task is associated with
+  """
+  products: [UUID!]!
+  """
+  Tags for categorizing and filtering tasks
+  """
+  tags: [String!]!
+  """
+  List of sprint IDs this task belongs to
+  """
+  sprints: [UUID!]!
+}
+
+"""
+Action to take when changing task status
+"""
+input TaskAssignAction @oneOf {
+  """
+  Provide executor user ID for the task
+  """
+  startWork: UUID
+  """
+  Provide time spent today for the task
+  """
+  stopWork: Int
+}
+
+"""
+Filter for retrieving task boards
+"""
+input TaskBoardFilter {
+  """
+  UUID of the project to retrieve tasks from
+  """
+  projectId: UUID!
+  """
+  Optional list of chunk IDs to filter tasks by
+  """
+  chunks: [UUID!]!
+  """
+  Optional list of product IDs to filter tasks by
+  """
+  products: [UUID!]!
+}
+
+"""
+Input for updating an existing task
+"""
+input TaskChange {
+  """
+  New parent ID (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  parentId: UUID
+  """
+  Updated task title
+  """
+  title: String
+  """
+  Updated task description (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  description: Delta
+  """
+  Updated time estimation (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  estimation: Int
+  """
+  Updated priority level
+  """
+  priority: Int
+  """
+  Updated deadline date (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  dueDate: NaiveDate
+  """
+  Updated list of assigned users
+  """
+  users: UuidsUpdate
+  """
+  Updated list of associated products
+  """
+  products: [UUID!]
+  """
+  Updated tags for the task
+  """
+  tags: StringsUpdate
+  """
+  Updated list of sprints this task belongs to
+  """
+  sprints: UuidsUpdate
+}
+
+"""
+GraphQL object implementation for TaskGroup type
+"""
+type TaskGroup implements Chunk {
+  """
+  Project ID this task group belongs to
+  """
+  projectId: UUID!
+  """
+  Unique identifier of this task group
+  """
+  id: UUID!
+  """
+  Parent ID if available
+  """
+  parentId: UUID
+  """
+  Title of this task group
+  """
+  title: String!
+  """
+  Rich text description if present
+  """
+  description: Delta
+  """
+  Time estimation in minutes, if present
+  """
+  estimation: Estimation
+  """
+  Sum of all estimations for this group and its descendants
+  """
+  estimationSum: Estimation!
+  """
+  Sum of all time spent on this group and its descendants
+  """
+  spentSum: Estimation!
+  """
+  Number of direct children
+  """
+  childrenCount: Int!
+  """
+  Depth level in chunk hierarchy, starting from 0
+  """
+  depth: Int!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Priority value
+  """
+  priority: Int!
+  """
+  Deadline date, if present
+  """
+  dueDate: NaiveDate
+  """
+  Calculated status based on child tasks
+  """
+  calcTaskStatus: TaskStatusEnum
+  """
+  Project this task group belongs to
+  """
+  project: Project!
+  """
+  Parent chunk, if available
+  """
+  parent: Chunk
+  """
+  ID of user who created this task group
+  """
+  createdBy: UUID!
+  """
+  ID of user who last updated this task group
+  """
+  updatedBy: UUID!
+  """
+  User who created this task group
+  """
+  createdByUser: User!
+  """
+  User who last updated this task group
+  """
+  updatedByUser: User!
+}
+
+"""
+Input object for creating a new TaskGroup
+"""
+input TaskGroupAdd {
+  """
+  ID of the project this task group belongs to
+  """
+  projectId: UUID!
+  """
+  Optional parent ID if this is a nested task group
+  """
+  parentId: UUID
+  """
+  Title of the task group
+  """
+  title: String!
+  """
+  Optional rich text description of the task group
+  """
+  description: Delta
+  """
+  Optional priority value for ordering (lower values have higher priority)
+  """
+  priority: Int
+  """
+  Due date for the task group
+  """
+  dueDate: NaiveDate
+  """
+  Optional time estimation in minutes for this task group
+  """
+  estimation: Int
+}
+
+"""
+Input object for updating an existing TaskGroup
+"""
+input TaskGroupChange {
+  """
+  Optional new parent ID for reparenting the task group
+  """
+  parentId: UUID
+  """
+  Optional new title for the task group
+  """
+  title: String
+  """
+  Optional new rich text description for the task group
+  """
+  description: Delta
+  """
+  Optional new priority value
+  """
+  priority: Int
+  """
+  Updated deadline date (use MaybeUndefined to distinguish between null and unchanged)
+  """
+  dueDate: NaiveDate
+  """
+  Optional new time estimation in minutes
+  """
+  estimation: Int
+}
+
+"""
+Task status values
+"""
+enum TaskStatusEnum {
+  """
+  Not yet scheduled
+  """
+  BACKLOG
+  """
+  Scheduled for work
+  """
+  TODO
+  """
+  Currently active
+  """
+  WIP
+  """
+  Temporarily blocked
+  """
+  HOLD
+  """
+  Completed
+  """
+  DONE
+}
+
+"""
+Team entity for GraphQL API
+"""
+type Team {
+  """
+  Unique identifier
+  """
+  id: UUID!
+  """
+  Team name
+  """
+  name: String!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Deletion timestamp
+  """
+  deletedAt: Timestamp
+}
+
+"""
+Input data for updating an existing team
+"""
+input TeamChange {
+  """
+  New name for the team (optional)
+  """
+  name: String
+  """
+  Whether the team should be marked as deleted (optional)
+  """
+  isDeleted: Boolean
+  """
+  New list of user IDs that should belong to this team (optional)
+  """
+  users: [UUID!]
+}
+
+"""
+Represents a deleted team notification
+"""
+type TeamDeleted {
+  """
+  The UUID of the team that was deleted
+  """
+  id: UUID!
+}
+
+"""
+Represents RFC 3339 and ISO 8601 date and time string such as 1996-12-19T16:39:57-08:00
+"""
+scalar Timestamp
+
+"""
+A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
+Strings within GraphQL. UUIDs are used to assign unique identifiers to
+entities without requiring a central allocating authority.
+
+# References
+
+* [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+* [RFC4122: A Universally Unique Identifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
+"""
+scalar UUID
+
+scalar Upload
+
+"""
+System user
+"""
+type User {
+  """
+  Associated company
+  """
+  companyId: Int!
+  """
+  Associated domain, if any
+  """
+  domainId: Int
+  """
+  Unique platform-generated identifier for the user
+  """
+  id: UUID!
+  """
+  First name
+  """
+  givenName: String
+  """
+  Last name
+  """
+  familyName: String
+  """
+  Full name
+  """
+  name: String!
+  """
+  Login username used for authentication
+  """
+  login: String
+  """
+  Whether the user has administrative privileges in the system
+  """
+  isAdmin: Boolean!
+  """
+  Assigned roles
+  """
+  roles: [UserRole!]!
+  """
+  Custom avatar flag
+  """
+  hasAvatar: Boolean!
+  """
+  Associated tags
+  """
+  tags: [String!]!
+  """
+  Creation timestamp
+  """
+  createdAt: Timestamp!
+  """
+  Last update timestamp
+  """
+  updatedAt: Timestamp!
+  """
+  Deletion timestamp
+  """
+  deletedAt: Timestamp
+  """
+  Associated team, if any
+  """
+  teamId: UUID
+  """
+  Custom IANA timezone identifier (e.g., 'America/New_York', 'Europe/London')
+  """
+  timezone: String!
+  """
+  Associated team
+  """
+  team: Team
+  """
+  Associated domain
+  """
+  domain: Domain
+  """
+  Associated company
+  """
+  company: Company!
+}
+
+"""
+Input type for creating a new user
+"""
+input UserAdd {
+  """
+  Company ID to associate the user with
+  """
+  companyId: Int!
+  """
+  User's first name (optional)
+  """
+  givenName: String
+  """
+  User's last name (optional)
+  """
+  familyName: String
+  """
+  Username for authentication
+  """
+  login: String!
+  """
+  Password for authentication (not stored directly)
+  """
+  password: String!
+  """
+  List of roles to assign to the user
+  """
+  roles: [UserRole!]!
+  """
+  Optional avatar image for the user
+  """
+  avatar: Upload
+  """
+  Optional team ID to associate the user with
+  """
+  teamId: UUID
+  """
+  User's timezone in IANA format
+  """
+  timezone: String!
+  """
+  List of tags to associate with the user
+  """
+  tags: [String!]!
+}
+
+"""
+Oneof for different ways to identify a user.
+"""
+input UserBy @oneOf {
+  """
+  Used for identifying users that don't belong to any authentication domain
+  """
+  withoutDomain: UserWithoutDomain
+  """
+  Used for identifying users that belong to a specific authentication domain
+  """
+  withDomain: UserWithDomain
+}
+
+"""
+Input type for updating an existing user
+"""
+input UserChange {
+  """
+  Updated first name (undefined means no change)
+  """
+  givenName: String
+  """
+  Updated last name (undefined means no change)
+  """
+  familyName: String
+  """
+  Updated username (null means no change)
+  """
+  login: String
+  """
+  Updated password (null means no change)
+  """
+  password: String
+  """
+  Updated roles (null means no change)
+  """
+  roles: UserRolesUpdate
+  """
+  Updated avatar (undefined means no change, null means remove avatar)
+  """
+  avatar: Upload
+  """
+  Flag to mark user as deleted or active
+  """
+  isDeleted: Boolean
+  """
+  Updated team association (undefined means no change, null means remove association)
+  """
+  teamId: UUID
+  """
+  Updated timezone (null means no change)
+  """
+  timezone: String
+  """
+  Updated tags (null means no change)
+  """
+  tags: StringsUpdate
+}
+
+"""
+Input type for bulk updating multiple users
+"""
+input UserCommonChange {
+  """
+  Updated roles (null means no change)
+  """
+  roles: UserRolesUpdate
+  """
+  Flag to mark users as deleted or active
+  """
+  isDeleted: Boolean
+  """
+  Updated team association (undefined means no change, null means remove association)
+  """
+  teamId: UUID
+  """
+  Updated timezone (null means no change)
+  """
+  timezone: String
+  """
+  Updated tags (null means no change)
+  """
+  tags: StringsUpdate
+}
+
+"""
+Event notification when a user is deleted
+"""
+type UserDeleted {
+  """
+  ID of the deleted user
+  """
+  id: UUID!
+}
+
+"""
+System user role
+"""
+enum UserRole {
+  """
+  Can edit content
+  """
+  EDITOR
+  """
+  Can create reports
+  """
+  REPORTER
+  """
+  Can manage projects
+  """
+  MANAGER
+  """
+  Can audit reports
+  """
+  REPORT_AUDITOR
+}
+
+"""
+Add/Remove vector for input objects
+"""
+input UserRolesAddRemove {
+  """
+  Items to add to the collection
+  """
+  add: [UserRole!]!
+  """
+  Items to remove from the collection
+  """
+  remove: [UserRole!]!
+}
+
+"""
+Enum for updating collections in GraphQL mutations
+"""
+input UserRolesUpdate @oneOf {
+  """
+  Replace the entire collection with this list
+  """
+  set: [UserRole!]
+  """
+  Add and remove specific items from the collection
+  """
+  addRemove: UserRolesAddRemove
+}
+
+"""
+Record representing a user's activity summary for a specific date
+"""
+type UserSummaryRecord {
+  """
+  The date this summary applies to
+  """
+  date: NaiveDate!
+  """
+  Hours reported for this date, if any
+  """
+  hours: Int
+  """
+  ID of a special day kind if this date is marked as a special day
+  """
+  specialDayKindId: Int
+  """
+  Whether this day's reports have been acknowledged/confirmed
+  """
+  ack: Boolean!
+  """
+  Resolves the special day kind information if this date has a special day
+  """
+  specialDayKind: SpecialDayKind
+}
+
+"""
+Used for users who belong to an external authentication domain (like LDAP or SSO).
+"""
+input UserWithDomain {
+  """
+  The name of the authentication domain the user belongs to
+  """
+  domainName: String!
+  """
+  The globally unique identifier for the user within their domain
+  """
+  guid: UUID!
+}
+
+"""
+Used for local users who don't belong to any specific authentication domain.
+"""
+input UserWithoutDomain {
+  """
+  The unique login identifier for the user
+  """
+  login: String!
+}
+
+"""
+Add/Remove vector for input objects
+"""
+input UuidsAddRemove {
+  """
+  Items to add to the collection
+  """
+  add: [UUID!]!
+  """
+  Items to remove from the collection
+  """
+  remove: [UUID!]!
+}
+
+"""
+Enum for updating collections in GraphQL mutations
+"""
+input UuidsUpdate @oneOf {
+  """
+  Replace the entire collection with this list
+  """
+  set: [UUID!]
+  """
+  Add and remove specific items from the collection
+  """
+  addRemove: UuidsAddRemove
+}
+
+"""
+Indicates that an Input Object is a OneOf Input Object (and thus requires exactly one of its field be provided)
+"""
+directive @oneOf on INPUT_OBJECT
+

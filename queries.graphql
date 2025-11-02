@@ -1,0 +1,48 @@
+# Login mutation
+mutation Login($domainName: String, $username: String!, $password: String!) {
+  login(domainName: $domainName, username: $username, password: $password) {
+    id
+    nbf
+    exp
+  }
+}
+
+# Fetch projects
+query GetProjects {
+  projects(
+    orders: [{ field: TITLE, ascending: true }]
+  ) {
+    id
+    title
+    doneAt
+  }
+}
+
+subscription OnProjectsUpdated {
+  projectsChanged {
+    id
+    code
+    title
+    dueDate
+    createdAt
+    updatedAt
+    priority
+    tags
+    doneAt
+  }
+}
+
+subscription OnProductsUpdated {
+  productsChanged {
+    projectId
+    id
+    code
+    createdAt
+    updatedAt
+    tags
+    path{
+      id
+      code
+    }
+  }
+}

@@ -1,0 +1,31 @@
+[project]
+name = "puzzle-reactor"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ariadne-codegen>=0.16.0",
+    "dotenv>=0.9.9",
+    "httpx>=0.28.1",
+    "pydantic>=2.12.3",
+    "websockets>=15.0.1",
+]
+
+[tool.ariadne-codegen]
+schema_path = "schema.graphql"
+queries_path = "queries.graphql"
+target_package_name = "puzzle"
+# enable_custom_operations = true
+
+[tool.ariadne-codegen.scalars.UUID]
+type = "str"
+
+[tool.ariadne-codegen.scalars.Timestamp]
+type = "str"
+
+[tool.ariadne-codegen.scalars.NaiveDate]
+type = "str"
+
+[tool.ariadne-codegen.scalars.Estimation]
+type = "int"
