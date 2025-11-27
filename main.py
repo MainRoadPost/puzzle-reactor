@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Пример приложения-реактора для работы с Puzzle API.
+Example reactor application for interacting with the Puzzle API.
 
-Демонстрирует:
-- Аутентификацию через GraphQL
-- Выполнение GraphQL запросов (получение списка проектов)
-- WebSocket подписки для отслеживания изменений в реальном времени
+Demonstrates:
+- Authentication via GraphQL
+- Executing GraphQL queries (retrieving a list of projects)
+- WebSocket subscriptions for tracking real-time changes
 """
 
 import asyncio
@@ -14,52 +14,52 @@ import logging
 
 from dotenv import load_dotenv
 
-# Импортируем патченый клиент Puzzle и связанные классы
-# Патч добавляет поддержку WebSocket подписок к базовому клиенту ariadne-codegen
+# Import the patched Puzzle client and related classes
+# The patch adds WebSocket subscription support to the base ariadne-codegen client
 from puzzle_client_patched import PuzzleClient
 from puzzle.exceptions import GraphQLClientHttpError
 from puzzle.get_projects import GetProjectsProjects
 
-# Настройка логирования для вывода информационных сообщений
+# Configure logging to emit informational messages
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
 
 
 class PuzzleReactor:
-    """Обрабатывает взаимодействие с Puzzle API для реакции на события.
+    """Handles interactions with the Puzzle API to react to events.
 
-    Класс отвечает за:
-    - Авторизацию в системе Puzzle через GraphQL
-    - Получение списка активных проектов через GraphQL запросы
-    - Мониторинг изменений проектов и продуктов через WebSocket подписки
+    The class handles:
+    - Puzzle authentication via GraphQL
+    - Retrieving a list of active projects via GraphQL queries
+    - Monitoring changes to projects and products via WebSocket subscriptions
     """
 
     def __init__(self):
-        """Инициализирует клиент Puzzle с HTTP и WebSocket подключениями."""
-        load_dotenv()  # Загружаем переменные окружения из .env файла
+        """Initializes the Puzzle client with both HTTP and WebSocket connections."""
+        load_dotenv()  # Load environment variables from the .env file
 
         PUZZLE_API = os.getenv("PUZZLE_API")
         if not PUZZLE_API:
             raise ValueError("PUZZLE_API environment variable is not set.")
 
-        # Формируем WebSocket URL из HTTP URL (http -> ws, /api/graphql -> /api/graphql/ws)
+        # Convert the HTTP URL to a WebSocket URL (http -> ws, /api/graphql -> /api/graphql/ws)
         ws_url = PUZZLE_API.replace("http", "ws").replace(
             "/api/graphql", "/api/graphql/ws"
         )
 
-        # Создаем клиент с поддержкой как HTTP запросов, так и WebSocket подписок
+        # Create a client that supports both HTTP requests and WebSocket subscriptions
         self.client = PuzzleClient(url=PUZZLE_API, ws_url=ws_url)
 
     async def login(self):
-        """Выполняет аутентификацию в Puzzle API через GraphQL мутацию.
+        """Authenticates against the Puzzle API using a GraphQL mutation.
 
         Returns:
-            bool: True если аутентификация успешна, False в противном случае.
+            bool: True if authentication succeeded, False otherwise.
         """
         domain = os.getenv("PUZZLE_USER_DOMAIN")
         username = os.getenv("PUZZLE_USERNAME")
         password = os.getenv("PUZZLE_PASSWORD")
 
-        # Проверяем наличие всех необходимых учетных данных
+        # Check that required credentials are present
         if username is None or password is None:
             logging.error("Login failed: Missing credentials.")
             return False
@@ -72,9 +72,9 @@ class PuzzleReactor:
             )
 
             if response.login:
-                # После успешной аутентификации cookie автоматически сохраняется
-                # в http_client.cookies и будет использоваться для всех последующих
-                # HTTP запросов и WebSocket подключений
+                # After successful authentication the cookie will be saved
+                # to http_client.cookies and used for subsequent
+                # HTTP requests and WebSocket connections
                 logging.info("Login successful.")
                 return True
             else:
@@ -85,16 +85,16 @@ class PuzzleReactor:
             return False
 
     async def fetch_projects(self) -> list[GetProjectsProjects]:
-        """Получает список активных проектов через GraphQL запрос.
+        """Fetches active projects using a GraphQL query.
 
         Returns:
-            list[GetProjectsProjects]: Список активных проектов (с done_at = None).
+            list[GetProjectsProjects]: A list of active projects (where done_at is None).
         """
         try:
             response = await self.client.get_projects()
             if response.projects:
-                # Фильтруем только активные проекты (у которых done_at пустое)
-                # Это проекты, которые еще не завершены
+                # Filter only active projects (with done_at == None)
+                # These are projects that are not yet finished
                 active_projects = [p for p in response.projects if p.done_at is None]
 
                 return active_projects
@@ -106,37 +106,37 @@ class PuzzleReactor:
             return []
 
     async def run(self):
-        """Запускает основной процесс приложения.
+        """Runs the application's main process.
 
-        Выполняет аутентификацию, затем создает WebSocket подписки для мониторинга
-        изменений проектов и продуктов в реальном времени.
+        Authenticates first, then creates WebSocket subscriptions to monitor
+        real-time project and product updates.
         """
-        # Сначала выполняем аутентификацию
+        # First authenticate
         if not await self.login():
             return
 
-        # Опциональный пример: можно получить список активных проектов
+        # Optional example: fetch the list of active projects
         # active_projects = await self.fetch_projects()
         # if not active_projects:
         #     return
         #
-        # # Обработка полученных проектов
+        # # Process fetched projects
         # for project in active_projects:
         #     logging.info(f"Processing project: {project.title}")
 
-        # Создаем обработчики для WebSocket подписок
+        # Create handlers for WebSocket subscriptions
         async def handle_projects():
-            """Обрабатывает события обновления проектов через WebSocket."""
+            """Handle project update events coming through the WebSocket."""
             async for projectUpdated in self.client.on_projects_updated():
                 logging.info(f"Project updated: {projectUpdated}")
 
         async def handle_products():
-            """Обрабатывает события обновления продуктов через WebSocket."""
+            """Handle product update events coming through the WebSocket."""
             async for productsUpdated in self.client.on_products_updated():
                 logging.info(f"Products updated: {productsUpdated}")
 
-        # Запускаем обе подписки параллельно
-        # Обе будут работать одновременно, реагируя на события в реальном времени
+        # Run both subscriptions in parallel
+        # Both will listen concurrently and react to real-time events
         await asyncio.gather(handle_projects(), handle_products())
 
 

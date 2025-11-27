@@ -1,49 +1,55 @@
 # Puzzle Reactor
 
-Пример приложения для работы с Puzzle API через GraphQL и WebSocket подписки.
+An example reactor application that interacts with the Puzzle API using GraphQL queries and WebSocket subscriptions.
 
-## Описание
+## Description
 
-Это демонстрационное приложение показывает, как:
+This demo application shows how to:
 
-1. **Подключаться к Puzzle API** — выполняет аутентификацию пользователя через GraphQL
-2. **Получать данные** — запрашивает список активных проектов через GraphQL запросы
-3. **Отслеживать изменения в реальном времени** — использует WebSocket подписки для мониторинга обновлений:
-   - `onProjectsUpdated` — отслеживает изменения в проектах
-   - `onProductsUpdated` — отслеживает изменения в продуктах
+1. **Connect to the Puzzle API** — authenticate a user through GraphQL
+2. **Fetch data** — retrieve a list of active projects via GraphQL queries
+3. **Monitor real-time updates** — use WebSocket subscriptions to track updates:
+   - `onProjectsUpdated` — watches for project changes
+   - `onProductsUpdated` — watches for product changes
 
-Приложение демонстрирует реактивный подход к работе с данными Puzzle, где изменения автоматически поступают через WebSocket соединение без необходимости постоянного опроса API.
+The application demonstrates a reactive approach to working with Puzzle data, where updates arrive automatically through a WebSocket connection without polling the API.
 
-## Изменение кода
+## Changing the generated client code
 
-Для общения с GraphQL-интерфейсом Puzzle программа использует клиент (модуль `puzzle`), созданный инструментом для кодогенерации **ariadne-codegen**. В случае если вам необходимо изменить функционал клиента, не нужно модифицировать вручную код модуля `puzzle`.
+The project uses a generated client (the `puzzle` module) created by the **ariadne-codegen** tool to interact with the Puzzle GraphQL API. If you need to change the client functionality, do not modify the generated `puzzle` module directly.
 
-Вместо этого необходимо:
+Instead:
 
-1. Убедиться, что файл `schema.graphql` содержит актуальную модель данных.
-2. Изменить файл `queries.graphql` так, чтобы он содержал необходимые запросы к БД Puzzle.
-3. Выполнить команду для регенерации модуля `puzzle`:
+1. Ensure `schema.graphql` contains the current data model.
+2. Update `queries.graphql` to include the queries you need for the Puzzle backend.
+3. Regenerate the `puzzle` module by running:
 
    ```bash
    uv run ariadne-codegen
    ```
 
-**Важно:** Запуск `ariadne-codegen` является обязательным шагом перед первым запуском приложения и после любых изменений в файлах `schema.graphql` или `queries.graphql`.
+**Important:** Running `ariadne-codegen` is required before the first run of the application and after any changes to `schema.graphql` or `queries.graphql`.
 
-## Обновление схемы
+## Updating the GraphQL schema
 
-Для обновления схемы потребуется установленное приложение cynic-cli, которое можно установить следующей командой (в системе должен быть установлен [Rust](https://rust-lang.org/tools/install/)):
+To update the schema you need the `cynic-cli` tool, which can be installed using Cargo. ([Rust language](https://rust-lang.org/tools/install) must be installed on your system)
 
 ```shell
 cargo install --git https://github.com/obmarg/cynic.git cynic-cli
 ```
 
-После установки cynic-cli выполните в shell команду `./get-schema.sh > schema.graphql`, в корне репозитория. Этот скрипт выполнит аутентификацию на сервере Puzzle и скачает актуальную схему GraphQL в файл `schema.graphql`.
+After installing `cynic-cli`, run the `get-schema.sh` script at the repository root to download the current GraphQL schema to `schema.graphql`:
 
-Чтобы скрипт успешно выполнился, необходимо предварительно задать в файле `.env` переменные:
-- `PUZZLE_API` — URL GraphQL API сервера Puzzle.
-- `PUZZLE_USER_DOMAIN` — домен студии, пустой, если домен не используется.
-- `PUZZLE_USERNAME` — имя пользователя.
-- `PUZZLE_PASSWORD` — пароль пользователя.
+```shell
+./get-schema.sh > schema.graphql
+```
 
-пример файла `.env` приведен в `example.env`.
+The script authenticates with the Puzzle server and saves the resulting schema to `schema.graphql`.
+
+Before running the script, ensure the following `.env` variables are set:
+- `PUZZLE_API` — the Puzzle GraphQL API URL.
+- `PUZZLE_USER_DOMAIN` — studio domain (leave empty if not used).
+- `PUZZLE_USERNAME` — the username.
+- `PUZZLE_PASSWORD` — the password.
+
+An example `.env` file is provided in `example.env`.
